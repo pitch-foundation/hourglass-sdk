@@ -1,7 +1,7 @@
 import { SeaportOrderComponents } from '../seaport/seaport.types';
 
-export type EventsMap = {
-  requestQuote: [
+export type RFQEventsMap = {
+  RequestQuote: [
     {
       rfqId: number;
       ttlMsecs: number;
@@ -12,7 +12,7 @@ export type EventsMap = {
       chainId: number;
     }
   ];
-  bestQuote: [
+  BestQuote: [
     | {
         rfqId: number;
         rfqType: typeof RfqTypeEnum.QUOTER_FILLS;
@@ -38,13 +38,13 @@ export type EventsMap = {
         };
       }
   ];
-  acceptQuote: [
+  AcceptQuote: [
     {
       quoteId: number;
       rfqId: number;
     }
   ];
-  orderFulfilled: [
+  OrderFulfilled: [
     {
       id: number;
       createdAt: Date;
@@ -58,11 +58,6 @@ export type EventsMap = {
       logIndex: number;
     }
   ];
-  getMarkets: [
-    {
-      markets: RFQMarket[];
-    }
-  ];
 };
 
 export enum RFQMethod {
@@ -73,10 +68,6 @@ export enum RFQMethod {
   hg_acceptQuote = 'hg_acceptQuote',
 }
 
-export enum DataMethod {
-  hg_getMarkets = 'hg_getMarkets',
-}
-
 export enum HourglassWebsocketEvent {
   message = 'message',
   AccessToken = 'AccessToken',
@@ -85,6 +76,18 @@ export enum HourglassWebsocketEvent {
   QuoteAccepted = 'QuoteAccepted',
   RequestForQuoteBroadcast = 'RequestForQuoteBroadcast',
   BestQuote = 'BestQuote',
+}
+
+export type DataEventsMap = {
+  GetMarkets: [
+    {
+      markets: RFQMarket[];
+    }
+  ];
+};
+
+export enum DataMethod {
+  hg_getMarkets = 'hg_getMarkets',
 }
 
 export type RfqType = 'MAKER_FILLS' | 'QUOTER_FILLS';

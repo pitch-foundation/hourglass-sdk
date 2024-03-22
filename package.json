@@ -18,6 +18,9 @@
     "@ethersproject/providers": "5.7.2",
     "@ethersproject/abi": "5.7.0",
     "ethers-multicall-provider": "3.1.2",
+    "viem": "2.x",
+    "wagmi": "^2.5.7",
+    "@wagmi/core": "^2.6.5",
     "socket.io-client": "^4.7.4"
   },
   "devDependencies": {
