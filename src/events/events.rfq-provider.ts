@@ -75,10 +75,10 @@ export class RFQProvider extends TypedEventEmitter<RFQEventsMap> {
 
             switch (method) {
               case RFQMethod.hg_requestQuote:
-                this.emit(RFQMethod.hg_requestQuote, data.result);
+                this.emit(RFQMethod.hg_requestQuote, data.result, data.error);
                 break;
               case RFQMethod.hg_acceptQuote:
-                this.emit(RFQMethod.hg_acceptQuote, data.result);
+                this.emit(RFQMethod.hg_acceptQuote, data.result, data.error);
                 break;
               default:
                 break;
@@ -89,7 +89,7 @@ export class RFQProvider extends TypedEventEmitter<RFQEventsMap> {
         this._rfqSocket.on(
           HourglassWebsocketEvent.BestQuote,
           (data: any, callback: (value: string) => void) => {
-            this.emit(HourglassWebsocketEvent.BestQuote, data);
+            this.emit(HourglassWebsocketEvent.BestQuote, data, undefined);
             callback('ACK');
           }
         );
@@ -97,7 +97,7 @@ export class RFQProvider extends TypedEventEmitter<RFQEventsMap> {
         this._rfqSocket.on(
           HourglassWebsocketEvent.OrderFulfilled,
           (data: any, callback: (value: string) => void) => {
-            this.emit(HourglassWebsocketEvent.OrderFulfilled, data);
+            this.emit(HourglassWebsocketEvent.OrderFulfilled, data, undefined);
             callback('ACK');
           }
         );

@@ -2,61 +2,77 @@ import { SeaportOrderComponents } from '../seaport/seaport.types';
 
 export type RFQEventsMap = {
   [RFQMethod.hg_requestQuote]: [
-    {
-      rfqId: number;
-      ttlMsecs: number;
-      type: RfqType;
-      baseAssetAddress: string;
-      quoteAssetAddress: string;
-      baseAmount: string;
-      chainId: number;
-    }
+    (
+      | {
+          rfqId: number;
+          ttlMsecs: number;
+          type: RfqType;
+          baseAssetAddress: string;
+          quoteAssetAddress: string;
+          baseAmount: string;
+          chainId: number;
+        }
+      | undefined
+    ),
+    error: object | undefined
   ];
   [HourglassWebsocketEvent.BestQuote]: [
-    | {
-        rfqId: number;
-        rfqType: typeof RfqTypeEnum.QUOTER_FILLS;
-        bestQuote: null;
-      }
-    | {
-        rfqId: number;
-        rfqType: typeof RfqTypeEnum.QUOTER_FILLS;
-        bestQuote: {
-          quoteId: number;
-          quoteAmount: string;
-          createdAt: string;
-        };
-        seaportOrderComponents: SeaportOrderComponents;
-      }
-    | {
-        rfqId: number;
-        rfqType: typeof RfqTypeEnum.MAKER_FILLS;
-        bestQuote: null | {
-          quoteId: number;
-          quoteAmount: string;
-          createdAt: string;
-        };
-      }
+    (
+      | {
+          rfqId: number;
+          rfqType: typeof RfqTypeEnum.QUOTER_FILLS;
+          bestQuote: null;
+        }
+      | {
+          rfqId: number;
+          rfqType: typeof RfqTypeEnum.QUOTER_FILLS;
+          bestQuote: {
+            quoteId: number;
+            quoteAmount: string;
+            createdAt: string;
+          };
+          seaportOrderComponents: SeaportOrderComponents;
+        }
+      | {
+          rfqId: number;
+          rfqType: typeof RfqTypeEnum.MAKER_FILLS;
+          bestQuote: null | {
+            quoteId: number;
+            quoteAmount: string;
+            createdAt: string;
+          };
+        }
+      | undefined
+    ),
+    error: object | undefined
   ];
   [RFQMethod.hg_acceptQuote]: [
-    {
-      quoteId: number;
-      rfqId: number;
-    }
+    (
+      | {
+          quoteId: number;
+          rfqId: number;
+        }
+      | undefined
+    ),
+    error: object | undefined
   ];
   [HourglassWebsocketEvent.OrderFulfilled]: [
-    {
-      id: number;
-      createdAt: Date;
-      orderId: number | null;
-      orderHash: string;
-      offerer: string;
-      zone: string;
-      recipient: string;
-      block: number;
-      transactionHash: string;
-      logIndex: number;
-    }
+    (
+      | {
+          id: number;
+          createdAt: Date;
+          orderId: number | null;
+          orderHash: string;
+          offerer: string;
+          zone: string;
+          recipient: string;
+          block: number;
+          transactionHash: string;
+          logIndex: number;
+        }
+      | undefined
+    ),
+    error: object | undefined
   ];
 };
 
@@ -80,9 +96,13 @@ export enum HourglassWebsocketEvent {
 
 export type DataEventsMap = {
   [DataMethod.hg_getMarkets]: [
-    {
-      markets: RFQMarket[];
-    }
+    (
+      | {
+          markets: RFQMarket[];
+        }
+      | undefined
+    ),
+    error: object | undefined
   ];
 };
 
