@@ -20,12 +20,7 @@ export const approveAmount = async ({
   if (!signer || !amount) return;
 
   const assetInstance = ERC20__factory.connect(tokenAddress, signer);
-  const { wait } = await assetInstance.approve(
-    STAKING_ADDRESSES.seaportConduit,
-    amount
-  );
-  const result = await wait();
-  if (result.status !== 1) throw new Error('Transaction failed');
+  return assetInstance.approve(STAKING_ADDRESSES.seaportConduit, amount);
 };
 
 export const acceptOrder = async ({
