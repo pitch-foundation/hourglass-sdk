@@ -15,10 +15,8 @@ export const approveAmount = async ({
 }: {
   signer: JsonRpcSigner;
   tokenAddress: string;
-  amount: BigNumber | null;
+  amount: BigNumber;
 }) => {
-  if (!signer || !amount) return;
-
   const assetInstance = ERC20__factory.connect(tokenAddress, signer);
   return assetInstance.approve(STAKING_ADDRESSES.seaportConduit, amount);
 };
