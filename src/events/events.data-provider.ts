@@ -33,8 +33,8 @@ export class DataProvider extends TypedEventEmitter<DataEventsMap> {
                               CONNECT
     //////////////////////////////////////////////////////////////*/
 
-  connect() {
-    this._dataSocket = io('ws://localhost:3000/data', {
+  connect(endpoint: string) {
+    this._dataSocket = io(endpoint, {
       transports: ['websocket'],
     });
     this._dataSocket.on(
@@ -46,7 +46,7 @@ export class DataProvider extends TypedEventEmitter<DataEventsMap> {
 
         switch (method) {
           case DataMethod.hg_getMarkets:
-            this.emit('GetMarkets', data.result);
+            this.emit(DataMethod.hg_getMarkets, data.result);
             break;
           default:
             break;

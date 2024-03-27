@@ -1,7 +1,7 @@
 import { SeaportOrderComponents } from '../seaport/seaport.types';
 
 export type RFQEventsMap = {
-  RequestQuote: [
+  [RFQMethod.hg_requestQuote]: [
     {
       rfqId: number;
       ttlMsecs: number;
@@ -12,7 +12,7 @@ export type RFQEventsMap = {
       chainId: number;
     }
   ];
-  BestQuote: [
+  [HourglassWebsocketEvent.BestQuote]: [
     | {
         rfqId: number;
         rfqType: typeof RfqTypeEnum.QUOTER_FILLS;
@@ -38,13 +38,13 @@ export type RFQEventsMap = {
         };
       }
   ];
-  AcceptQuote: [
+  [RFQMethod.hg_acceptQuote]: [
     {
       quoteId: number;
       rfqId: number;
     }
   ];
-  OrderFulfilled: [
+  [HourglassWebsocketEvent.OrderFulfilled]: [
     {
       id: number;
       createdAt: Date;
@@ -79,7 +79,7 @@ export enum HourglassWebsocketEvent {
 }
 
 export type DataEventsMap = {
-  GetMarkets: [
+  [DataMethod.hg_getMarkets]: [
     {
       markets: RFQMarket[];
     }

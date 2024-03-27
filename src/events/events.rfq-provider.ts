@@ -39,8 +39,16 @@ export class RFQProvider extends TypedEventEmitter<RFQEventsMap> {
                               CONNECT
     //////////////////////////////////////////////////////////////*/
 
-  connect(authSignature: string, userAddress: string) {
-    const authSocket = io('ws://localhost:3000/rfq', {
+  connect({
+    authSignature,
+    userAddress,
+    endpoint,
+  }: {
+    authSignature: string;
+    userAddress: string;
+    endpoint: string;
+  }) {
+    const authSocket = io(endpoint, {
       transports: ['websocket'],
       auth: {
         authSignature,
@@ -51,7 +59,7 @@ export class RFQProvider extends TypedEventEmitter<RFQEventsMap> {
       HourglassWebsocketEvent.AccessToken,
       (data: { accessToken: string }, callback: (value: string) => void) => {
         callback('ACK');
-        this._rfqSocket = io('ws://localhost:3000/rfq', {
+        this._rfqSocket = io(endpoint, {
           transports: ['websocket'],
           auth: {
             token: data.accessToken,
@@ -67,10 +75,10 @@ export class RFQProvider extends TypedEventEmitter<RFQEventsMap> {
 
             switch (method) {
               case RFQMethod.hg_requestQuote:
-                this.emit('RequestQuote', data.result);
+                this.emit(RFQMethod.hg_requestQuote, data.result);
                 break;
               case RFQMethod.hg_acceptQuote:
-                this.emit('AcceptQuote', data.result);
+                this.emit(RFQMethod.hg_acceptQuote, data.result);
                 break;
               default:
                 break;
@@ -81,7 +89,7 @@ export class RFQProvider extends TypedEventEmitter<RFQEventsMap> {
         this._rfqSocket.on(
           HourglassWebsocketEvent.BestQuote,
           (data: any, callback: (value: string) => void) => {
-            this.emit('BestQuote', data);
+            this.emit(HourglassWebsocketEvent.BestQuote, data);
             callback('ACK');
           }
         );
@@ -89,7 +97,7 @@ export class RFQProvider extends TypedEventEmitter<RFQEventsMap> {
         this._rfqSocket.on(
           HourglassWebsocketEvent.OrderFulfilled,
           (data: any, callback: (value: string) => void) => {
-            this.emit('OrderFulfilled', data);
+            this.emit(HourglassWebsocketEvent.OrderFulfilled, data);
             callback('ACK');
           }
         );
