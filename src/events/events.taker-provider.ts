@@ -52,13 +52,25 @@ export class TakerProvider extends TypedEventEmitter<TakerEventsMap> {
     source: TakerSource;
     endpoint: string;
   }) {
-    const authSocket = io(endpoint, {
-      transports: ['websocket'],
-      auth: {
-        source,
+    let auth: Record<string, any> = {
+      source,
+    };
+    if (source === 'API') {
+      auth = {
+        ...auth,
         clientId,
         clientSecret,
-      },
+      };
+    } else if (source === 'HOURGLASS_PROTOCOL' || source === 'ION_PROTOCOL') {
+      auth = {
+        ...auth,
+        secret: clientSecret,
+      };
+    }
+
+    const authSocket = io(endpoint, {
+      transports: ['websocket'],
+      auth,
     });
     authSocket.on(
       HourglassWebsocketEvent.AccessToken,
@@ -67,6 +79,7 @@ export class TakerProvider extends TypedEventEmitter<TakerEventsMap> {
         this._socket = io(endpoint, {
           transports: ['websocket'],
           auth: {
+            ...auth,
             token: data.accessToken,
           },
         });
