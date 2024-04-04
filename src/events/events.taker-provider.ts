@@ -46,14 +46,17 @@ export class TakerProvider extends TypedEventEmitter<TakerEventsMap> {
     clientSecret,
     source,
     endpoint,
+    allowForceDisconnect,
   }: {
     clientId: string;
     clientSecret: string;
     source: TakerSource;
     endpoint: string;
+    allowForceDisconnect?: boolean;
   }) {
     let auth: Record<string, any> = {
       source,
+      allowForceDisconnect,
     };
     if (source === 'API') {
       auth = {
