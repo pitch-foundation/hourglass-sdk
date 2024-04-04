@@ -1,4 +1,5 @@
-export const ENDPOINTS = {
-  rfq: 'ws://localhost:3000/rfq',
-  data: 'ws://localhost:3000/data',
+export const DEV_ENDPOINTS = {
+  taker: 'ws://localhost:3100/taker',
+  maker: 'ws://localhost:3100/maker',
+  data: 'ws://localhost:3100/data',
 };

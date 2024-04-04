@@ -5,7 +5,7 @@ import {
   signSeaportOrderComponents,
 } from '../seaport/seaport.utils';
 import { BigNumber } from 'ethers';
-import { RFQProvider } from '../events/events.rfq-provider';
+import { TakerProvider } from '../events/events.taker-provider';
 import { SeaportOrderComponents } from '../seaport/seaport.types';
 
 export const approveAmount = async ({
@@ -29,7 +29,7 @@ export const acceptOrder = async ({
 }: {
   signer: JsonRpcSigner;
   seaportOrderComponents: SeaportOrderComponents;
-  provider: RFQProvider;
+  provider: TakerProvider;
   quoteId: number;
 }) => {
   const signature = await signSeaportOrderComponents(

@@ -1,17 +1,59 @@
-import { SeaportOrderComponents } from '../seaport/seaport.types';
+import {
+  SeaportOrderComponents,
+  SeaportOrderComponentsEntity,
+} from '../seaport/seaport.types';
 
-export type RFQEventsMap = {
-  [RFQMethod.hg_requestQuote]: [
+export type BaseXorQuoteAmount =
+  | { quoteAmount: string }
+  | { baseAmount: string };
+
+export type UseCase = 'DEFAULT' | 'ION_DELEVERAGE';
+export type OrderExecutor = 'MAKER' | 'TAKER';
+
+export type ExecutorAndQuoteAssetReceiver =
+  | {
+      executor: 'MAKER';
+      quoteAssetReceiverAddress: string;
+    }
+  | {
+      executor: 'TAKER';
+    };
+
+export type OrderFulfilled = {
+  id: number;
+  createdAt: Date;
+  orderId: number;
+  orderHash: string;
+  offerer: string;
+  zone: string;
+  recipient: string;
+  block: number;
+  transactionHash: string;
+  logIndex: number;
+};
+
+export type TakerEventsMap = {
+  [TakerMethod.hg_requestQuote]: [
     (
-      | {
+      | ({
           rfqId: number;
-          ttlMsecs: number;
-          type: RfqType;
+          baseAssetChainId: number;
+          quoteAssetChainId: number;
           baseAssetAddress: string;
           quoteAssetAddress: string;
-          baseAmount: string;
-          chainId: number;
-        }
+          ttlMsecs: number;
+          useCase: UseCase;
+        } & (
+          | {
+              baseAmount: string;
+              quoteAmount: null;
+            }
+          | {
+              baseAmount: null;
+              quoteAmount: string;
+            }
+        ) &
+          ExecutorAndQuoteAssetReceiver)
       | undefined
     ),
     error: object | undefined
@@ -20,33 +62,30 @@ export type RFQEventsMap = {
     (
       | {
           rfqId: number;
-          rfqType: typeof RfqTypeEnum.QUOTER_FILLS;
           bestQuote: null;
         }
       | {
           rfqId: number;
-          rfqType: typeof RfqTypeEnum.QUOTER_FILLS;
-          bestQuote: {
+          bestQuote: BaseXorQuoteAmount & {
             quoteId: number;
-            quoteAmount: string;
             createdAt: string;
           };
           seaportOrderComponents: SeaportOrderComponents;
         }
       | {
           rfqId: number;
-          rfqType: typeof RfqTypeEnum.MAKER_FILLS;
-          bestQuote: null | {
-            quoteId: number;
-            quoteAmount: string;
-            createdAt: string;
-          };
+          bestQuote:
+            | null
+            | (BaseXorQuoteAmount & {
+                quoteId: number;
+                createdAt: string;
+              });
         }
       | undefined
     ),
     error: object | undefined
   ];
-  [RFQMethod.hg_acceptQuote]: [
+  [TakerMethod.hg_acceptQuote]: [
     (
       | {
           quoteId: number;
@@ -57,18 +96,49 @@ export type RFQEventsMap = {
     error: object | undefined
   ];
   [HourglassWebsocketEvent.OrderFulfilled]: [
+    OrderFulfilled | undefined,
+    error: object | undefined
+  ];
+};
+
+export type MakerEventsMap = {
+  [MakerMethod.hg_subscribeToMarket]: [
+    {
+      marketId: number;
+    },
+    error: object | undefined
+  ];
+  [MakerMethod.hg_unsubscribeFromMarket]: [
+    {
+      marketId: number;
+    },
+    error: object | undefined
+  ];
+  [MakerMethod.hg_submitQuote]: [
+    {
+      quoteId: number;
+      rfqId: number;
+      quoteAmount: string;
+      createdAt: Date;
+    },
+    error: object | undefined
+  ];
+  [HourglassWebsocketEvent.OrderFulfilled]: [
+    OrderFulfilled | undefined,
+    error: object | undefined
+  ];
+  [HourglassWebsocketEvent.OrderCreated]: [
     (
       | {
           id: number;
-          createdAt: Date;
-          orderId: number | null;
-          orderHash: string;
-          offerer: string;
-          zone: string;
-          recipient: string;
-          block: number;
-          transactionHash: string;
-          logIndex: number;
+          createdAt: string;
+          components: SeaportOrderComponentsEntity;
+          signature: string;
+          hash: string;
+          extraData: string | null;
+          inputChainId: number;
+          outputChainId: number;
+          rfqId: number;
         }
       | undefined
     ),
@@ -76,16 +146,18 @@ export type RFQEventsMap = {
   ];
 };
 
-export enum RFQMethod {
-  hg_subscribeToMarket = 'hg_subscribeToMarket',
-  hg_unsubscribeFromMarket = 'hg_unsubscribeFromMarket',
+export enum TakerMethod {
   hg_requestQuote = 'hg_requestQuote',
-  hg_submitQuote = 'hg_submitQuote',
   hg_acceptQuote = 'hg_acceptQuote',
 }
 
+export enum MakerMethod {
+  hg_subscribeToMarket = 'hg_subscribeToMarket',
+  hg_unsubscribeFromMarket = 'hg_unsubscribeFromMarket',
+  hg_submitQuote = 'hg_submitQuote',
+}
+
 export enum HourglassWebsocketEvent {
-  message = 'message',
   AccessToken = 'AccessToken',
   OrderCreated = 'OrderCreated',
   OrderFulfilled = 'OrderFulfilled',
@@ -112,11 +184,6 @@ export enum DataMethod {
 
 export type RfqType = 'MAKER_FILLS' | 'QUOTER_FILLS';
 
-export enum RfqTypeEnum {
-  MAKER_FILLS = 'MAKER_FILLS',
-  QUOTER_FILLS = 'QUOTER_FILLS',
-}
-
 type RFQChain = 'Ethereum' | 'Fraxtal';
 
 type RFQMarketAsset = {
@@ -140,3 +207,5 @@ export type RFQMarket = {
   asset0: RFQMarketAsset;
   asset1: RFQMarketAsset;
 };
+
+export type TakerSource = 'API' | 'HOURGLASS_PROTOCOL' | 'ION_PROTOCOL';

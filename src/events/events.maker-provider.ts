@@ -1,27 +1,25 @@
 import { TypedEventEmitter } from './events.utils';
 import { io, Socket } from 'socket.io-client';
 import {
-  RFQMethod,
+  MakerMethod,
+  MakerEventsMap,
   HourglassWebsocketEvent,
-  RFQEventsMap,
-  RfqType,
 } from './events.types';
-import { SeaportOrderComponents } from '../seaport/seaport.types';
 
-export class RFQProvider extends TypedEventEmitter<RFQEventsMap> {
-  private _rfqSocket: Socket | undefined;
+export class MakerProvider extends TypedEventEmitter<MakerEventsMap> {
+  private _socket: Socket | undefined;
   private _globalMessages: {
     id: string;
-    method: RFQMethod;
+    method: MakerMethod;
   }[] = [];
 
   constructor() {
     super();
   }
 
-  private _emitRFQMessage(method: RFQMethod, params: unknown) {
-    if (!this._rfqSocket) {
-      console.error('rfqSocket not connected. Cannot send message');
+  private _emitMessage(method: MakerMethod, params: unknown) {
+    if (!this._socket) {
+      console.error('Maker socket not connected. Cannot send message');
       return;
     }
     const uuid = self.crypto.randomUUID();
@@ -32,7 +30,7 @@ export class RFQProvider extends TypedEventEmitter<RFQEventsMap> {
       id: uuid,
     };
     this._globalMessages.push({ id: uuid, method });
-    this._rfqSocket.emit('message', message);
+    this._socket.emit('message', message);
   }
 
   /*//////////////////////////////////////////////////////////////
@@ -40,33 +38,33 @@ export class RFQProvider extends TypedEventEmitter<RFQEventsMap> {
     //////////////////////////////////////////////////////////////*/
 
   connect({
-    authSignature,
-    userAddress,
+    clientId,
+    clientSecret,
     endpoint,
   }: {
-    authSignature: string;
-    userAddress: string;
+    clientId: string;
+    clientSecret: string;
     endpoint: string;
   }) {
     const authSocket = io(endpoint, {
       transports: ['websocket'],
       auth: {
-        authSignature,
-        authMessage: { address: userAddress },
+        clientId,
+        clientSecret,
       },
     });
     authSocket.on(
       HourglassWebsocketEvent.AccessToken,
       (data: { accessToken: string }, callback: (value: string) => void) => {
         callback('ACK');
-        this._rfqSocket = io(endpoint, {
+        this._socket = io(endpoint, {
           transports: ['websocket'],
           auth: {
             token: data.accessToken,
           },
         });
 
-        this._rfqSocket.on(
+        this._socket.on(
           'message',
           (data: { id: string; result: any; error: any }) => {
             const method = this._globalMessages.find(
@@ -74,11 +72,22 @@ export class RFQProvider extends TypedEventEmitter<RFQEventsMap> {
             )?.method;
 
             switch (method) {
-              case RFQMethod.hg_requestQuote:
-                this.emit(RFQMethod.hg_requestQuote, data.result, data.error);
+              case MakerMethod.hg_submitQuote:
+                this.emit(MakerMethod.hg_submitQuote, data.result, data.error);
                 break;
-              case RFQMethod.hg_acceptQuote:
-                this.emit(RFQMethod.hg_acceptQuote, data.result, data.error);
+              case MakerMethod.hg_subscribeToMarket:
+                this.emit(
+                  MakerMethod.hg_subscribeToMarket,
+                  data.result,
+                  data.error
+                );
+                break;
+              case MakerMethod.hg_unsubscribeFromMarket:
+                this.emit(
+                  MakerMethod.hg_unsubscribeFromMarket,
+                  data.result,
+                  data.error
+                );
                 break;
               default:
                 break;
@@ -86,15 +95,15 @@ export class RFQProvider extends TypedEventEmitter<RFQEventsMap> {
           }
         );
 
-        this._rfqSocket.on(
-          HourglassWebsocketEvent.BestQuote,
+        this._socket.on(
+          HourglassWebsocketEvent.OrderCreated,
           (data: any, callback: (value: string) => void) => {
-            this.emit(HourglassWebsocketEvent.BestQuote, data, undefined);
+            this.emit(HourglassWebsocketEvent.OrderCreated, data, undefined);
             callback('ACK');
           }
         );
 
-        this._rfqSocket.on(
+        this._socket.on(
           HourglassWebsocketEvent.OrderFulfilled,
           (data: any, callback: (value: string) => void) => {
             this.emit(HourglassWebsocketEvent.OrderFulfilled, data, undefined);
@@ -109,21 +118,15 @@ export class RFQProvider extends TypedEventEmitter<RFQEventsMap> {
                               ACTIONS
     //////////////////////////////////////////////////////////////*/
 
-  requestQuote(data: {
-    baseAssetAddress: string;
-    quoteAssetAddress: string;
-    baseAmount: string;
-    chainId: number;
-    type: RfqType;
-  }) {
-    this._emitRFQMessage(RFQMethod.hg_requestQuote, data);
+  submitQuote(data: { quoteAmount: string; rfqId: number }) {
+    this._emitMessage(MakerMethod.hg_submitQuote, data);
   }
 
-  acceptQuote(data: {
-    quoteId: number;
-    components?: SeaportOrderComponents;
-    signature?: string;
-  }) {
-    this._emitRFQMessage(RFQMethod.hg_acceptQuote, data);
+  subscribeToMarket(data: { marketId: number }) {
+    this._emitMessage(MakerMethod.hg_subscribeToMarket, data);
+  }
+
+  unsubscribeFromMarket(data: { marketId: number }) {
+    this._emitMessage(MakerMethod.hg_unsubscribeFromMarket, data);
   }
 }
