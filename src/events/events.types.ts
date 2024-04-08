@@ -101,47 +101,105 @@ export type TakerEventsMap = {
   ];
 };
 
-export type MakerEventsMap = {
-  [MakerMethod.hg_subscribeToMarket]: [
-    {
+export type SubscribeToMarketType =
+  | {
       marketId: number;
-    },
-    error: object | undefined
-  ];
-  [MakerMethod.hg_unsubscribeFromMarket]: [
-    {
+    }
+  | undefined;
+
+export type UnsubscribeFromMarketType =
+  | {
       marketId: number;
-    },
-    error: object | undefined
-  ];
-  [MakerMethod.hg_submitQuote]: [
-    {
+    }
+  | undefined;
+
+export type SubmitQuoteType =
+  | {
       quoteId: number;
       rfqId: number;
       quoteAmount: string;
       createdAt: Date;
-    },
+    }
+  | undefined;
+
+export type OrderCreatedType =
+  | {
+      id: number;
+      createdAt: string;
+      components: SeaportOrderComponentsEntity;
+      signature: string;
+      hash: string;
+      extraData: string | null;
+      inputChainId: number;
+      outputChainId: number;
+      rfqId: number;
+    }
+  | undefined;
+
+export type RequestForQuoteBroadcastType =
+  | ({
+      rfqId: number;
+      baseAssetChainId: number;
+      quoteAssetChainId: number;
+      baseAssetAddress: string;
+      quoteAssetAddress: string;
+      ttlMsecs: number;
+      useCase: UseCase;
+    } & (
+      | {
+          baseAmount: string;
+          quoteAmount: null;
+        }
+      | {
+          baseAmount: null;
+          quoteAmount: string;
+        }
+    ) &
+      ExecutorAndQuoteAssetReceiver)
+  | undefined;
+
+export type QuoteAcceptedType =
+  | {
+      quoteId: number;
+      rfqId: number;
+      seaportOrderComponents: SeaportOrderComponents;
+    }
+  | undefined;
+
+export type AccessTokenType =
+  | {
+      accessToken: string;
+    }
+  | undefined;
+
+export type MakerEventsMap = {
+  [MakerMethod.hg_subscribeToMarket]: [
+    SubscribeToMarketType,
     error: object | undefined
   ];
+  [MakerMethod.hg_unsubscribeFromMarket]: [
+    UnsubscribeFromMarketType,
+    error: object | undefined
+  ];
+  [MakerMethod.hg_submitQuote]: [SubmitQuoteType, error: object | undefined];
   [HourglassWebsocketEvent.OrderFulfilled]: [
     OrderFulfilled | undefined,
     error: object | undefined
   ];
   [HourglassWebsocketEvent.OrderCreated]: [
-    (
-      | {
-          id: number;
-          createdAt: string;
-          components: SeaportOrderComponentsEntity;
-          signature: string;
-          hash: string;
-          extraData: string | null;
-          inputChainId: number;
-          outputChainId: number;
-          rfqId: number;
-        }
-      | undefined
-    ),
+    OrderCreatedType | undefined,
+    error: object | undefined
+  ];
+  [HourglassWebsocketEvent.RequestForQuoteBroadcast]: [
+    RequestForQuoteBroadcastType,
+    error: object | undefined
+  ];
+  [HourglassWebsocketEvent.QuoteAccepted]: [
+    QuoteAcceptedType,
+    error: object | undefined
+  ];
+  [HourglassWebsocketEvent.AccessToken]: [
+    AccessTokenType,
     error: object | undefined
   ];
 };
