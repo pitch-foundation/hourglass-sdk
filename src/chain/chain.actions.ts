@@ -34,8 +34,7 @@ export const acceptOrder = async ({
 }) => {
   const signature = await signSeaportOrderComponents(
     signer,
-    seaportOrderComponents,
-    false
+    seaportOrderComponents
   );
   provider.acceptQuote({
     quoteId,

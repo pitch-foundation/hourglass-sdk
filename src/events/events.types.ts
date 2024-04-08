@@ -1,7 +1,9 @@
+import { Socket } from 'socket.io-client';
 import {
   SeaportOrderComponents,
   SeaportOrderComponentsEntity,
 } from '../seaport/seaport.types';
+import { DisconnectDescription } from 'socket.io-client/build/esm/socket';
 
 export type BaseXorQuoteAmount =
   | { quoteAmount: string }
@@ -19,7 +21,7 @@ export type ExecutorAndQuoteAssetReceiver =
       executor: 'TAKER';
     };
 
-export type OrderFulfilled = {
+export type OrderFulfilledType = {
   id: number;
   createdAt: Date;
   orderId: number;
@@ -32,73 +34,139 @@ export type OrderFulfilled = {
   logIndex: number;
 };
 
+export type OrderCreatedType = {
+  id: number;
+  createdAt: string;
+  components: SeaportOrderComponentsEntity;
+  signature: string;
+  hash: string;
+  extraData: string | null;
+  inputChainId: number;
+  outputChainId: number;
+  rfqId: number;
+};
+
+export type SubmitQuoteType = {
+  quoteId: number;
+  rfqId: number;
+  quoteAmount: string;
+  createdAt: Date;
+};
+
+export type RequestQuoteType = {
+  rfqId: number;
+  baseAssetChainId: number;
+  quoteAssetChainId: number;
+  baseAssetAddress: string;
+  quoteAssetAddress: string;
+  ttlMsecs: number;
+  useCase: UseCase;
+} & (
+  | {
+      baseAmount: string;
+      quoteAmount: null;
+    }
+  | {
+      baseAmount: null;
+      quoteAmount: string;
+    }
+) &
+  ExecutorAndQuoteAssetReceiver;
+
+export type RequestForQuoteBroadcastType =
+  | {
+      rfqId: number;
+      baseAssetChainId: number;
+      quoteAssetChainId: number;
+      baseAssetAddress: string;
+      quoteAssetAddress: string;
+      ttlMsecs: number;
+      useCase: UseCase;
+    } & (
+      | {
+          baseAmount: string;
+          quoteAmount: null;
+        }
+      | {
+          baseAmount: null;
+          quoteAmount: string;
+        }
+    ) &
+      ExecutorAndQuoteAssetReceiver;
+
+export type QuoteAcceptedType = {
+  quoteId: number;
+  rfqId: number;
+  seaportOrderComponents: SeaportOrderComponents;
+};
+
+export type AcceptQuoteType = {
+  quoteId: number;
+  rfqId: number;
+};
+
+export type AccessTokenType = {
+  accessToken: string;
+};
+
+export type UnsubscribeFromMarketType = {
+  marketId: number;
+};
+
+export type BestQuoteType =
+  | {
+      rfqId: number;
+      bestQuote: null;
+    }
+  | {
+      rfqId: number;
+      bestQuote: BaseXorQuoteAmount & {
+        quoteId: number;
+        createdAt: string;
+      };
+      seaportOrderComponents: SeaportOrderComponents;
+    }
+  | {
+      rfqId: number;
+      bestQuote:
+        | null
+        | (BaseXorQuoteAmount & {
+            quoteId: number;
+            createdAt: string;
+          });
+    };
+
 export type TakerEventsMap = {
   [TakerMethod.hg_requestQuote]: [
-    (
-      | ({
-          rfqId: number;
-          baseAssetChainId: number;
-          quoteAssetChainId: number;
-          baseAssetAddress: string;
-          quoteAssetAddress: string;
-          ttlMsecs: number;
-          useCase: UseCase;
-        } & (
-          | {
-              baseAmount: string;
-              quoteAmount: null;
-            }
-          | {
-              baseAmount: null;
-              quoteAmount: string;
-            }
-        ) &
-          ExecutorAndQuoteAssetReceiver)
-      | undefined
-    ),
+    RequestQuoteType | undefined,
     error: object | undefined
   ];
   [HourglassWebsocketEvent.BestQuote]: [
-    (
-      | {
-          rfqId: number;
-          bestQuote: null;
-        }
-      | {
-          rfqId: number;
-          bestQuote: BaseXorQuoteAmount & {
-            quoteId: number;
-            createdAt: string;
-          };
-          seaportOrderComponents: SeaportOrderComponents;
-        }
-      | {
-          rfqId: number;
-          bestQuote:
-            | null
-            | (BaseXorQuoteAmount & {
-                quoteId: number;
-                createdAt: string;
-              });
-        }
-      | undefined
-    ),
+    BestQuoteType | undefined,
     error: object | undefined
   ];
   [TakerMethod.hg_acceptQuote]: [
-    (
-      | {
-          quoteId: number;
-          rfqId: number;
-        }
-      | undefined
-    ),
+    AcceptQuoteType | undefined,
     error: object | undefined
   ];
   [HourglassWebsocketEvent.OrderFulfilled]: [
-    OrderFulfilled | undefined,
+    OrderFulfilledType | undefined,
     error: object | undefined
   ];
+  [HourglassWebsocketEvent.OrderCreated]: [
+    OrderCreatedType | undefined,
+    error: object | undefined
+  ];
+  [HourglassWebsocketEvent.AccessToken]: [
+    AccessTokenType,
+    error: object | undefined
+  ];
+  connect: [];
+  disconnect: [
+    reason: Socket.DisconnectReason,
+    description: DisconnectDescription | undefined
+  ];
+  connect_error: [error: Error];
 };
 
 export type MakerEventsMap = {
@@ -109,41 +177,39 @@ export type MakerEventsMap = {
     error: object | undefined
   ];
   [MakerMethod.hg_unsubscribeFromMarket]: [
-    {
-      marketId: number;
-    },
+    UnsubscribeFromMarketType,
     error: object | undefined
   ];
   [MakerMethod.hg_submitQuote]: [
-    {
-      quoteId: number;
-      rfqId: number;
-      quoteAmount: string;
-      createdAt: Date;
-    },
+    SubmitQuoteType | undefined,
     error: object | undefined
   ];
   [HourglassWebsocketEvent.OrderFulfilled]: [
-    OrderFulfilled | undefined,
+    OrderFulfilledType | undefined,
     error: object | undefined
   ];
   [HourglassWebsocketEvent.OrderCreated]: [
-    (
-      | {
-          id: number;
-          createdAt: string;
-          components: SeaportOrderComponentsEntity;
-          signature: string;
-          hash: string;
-          extraData: string | null;
-          inputChainId: number;
-          outputChainId: number;
-          rfqId: number;
-        }
-      | undefined
-    ),
+    OrderCreatedType | undefined,
     error: object | undefined
   ];
+  [HourglassWebsocketEvent.RequestForQuoteBroadcast]: [
+    RequestForQuoteBroadcastType | undefined,
+    error: object | undefined
+  ];
+  [HourglassWebsocketEvent.QuoteAccepted]: [
+    QuoteAcceptedType | undefined,
+    error: object | undefined
+  ];
+  [HourglassWebsocketEvent.AccessToken]: [
+    AccessTokenType,
+    error: object | undefined
+  ];
+  connect: [];
+  disconnect: [
+    reason: Socket.DisconnectReason,
+    description: DisconnectDescription | undefined
+  ];
+  connect_error: [error: Error];
 };
 
 export enum TakerMethod {
@@ -209,3 +275,9 @@ export type RFQMarket = {
 };
 
 export type TakerSource = 'API' | 'HOURGLASS_PROTOCOL' | 'ION_PROTOCOL';
+
+export type AuthType = {
+  clientId: string;
+  clientSecret: string;
+  token?: string;
+};

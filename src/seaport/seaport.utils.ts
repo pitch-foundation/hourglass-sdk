@@ -9,7 +9,7 @@ import {
 import { MulticallWrapper } from 'ethers-multicall-provider';
 import { ethers } from 'ethers';
 import { keccak256 } from 'ethers/lib/utils';
-import { GnosisSafe1_3__factory, SeaportV5__factory } from '../abi';
+import { SeaportV5__factory } from '../abi';
 import { OrderComponentsStruct } from '../abi/SeaportV5';
 
 // globalThis.Buffer = Buffer;
@@ -83,8 +83,7 @@ const computeDigestEip712 = (domainSeparator: string, orderHash: string) => {
 
 export const signSeaportOrderComponents = async (
   signer: JsonRpcSigner,
-  components: AwaitedObject<OrderComponentsStruct>,
-  isGnosis: boolean
+  components: AwaitedObject<OrderComponentsStruct>
 ) => {
   // Retrieved from etherscan by calling the information function on seaport 1.5
   // https://etherscan.io/address/0x00000000000000adc04c56bf30ac9d3c0aaf14dc#readContract
@@ -99,60 +98,12 @@ export const signSeaportOrderComponents = async (
   const domainSeparatorSeaport =
     '0x0d725b53ccd7c23735755082eee9d43d3add450d3564ad51af0d29aa16eeab3c';
 
-  if (!isGnosis) {
-    // EOA signature, returns compact signature
-    const signatureCompact = ethers.utils.splitSignature(signatureFull).compact;
-    // EIP 712 Signature
-    const digest = computeDigestEip712(domainSeparatorSeaport, orderHash);
-    await validateSignature(digest, signatureCompact, components.offerer);
-    return signatureCompact;
-  } else {
-    // const signatureCompact = await signSeaportOrder(signer, components);
-    const validLength =
-      signatureFull.length >= 132 && (signatureFull.length - 2) % 130 === 0;
-    if (!validLength) throw new Error('Invalid signature length');
-    const numSigs = (signatureFull.length - 2) / 130;
-    if (numSigs > 3) {
-      throw new Error(
-        'Too many signatures. Currently only 3 signatures are supported'
-      );
-    }
-    const gnosisSafe = GnosisSafe1_3__factory.connect(
-      components.offerer,
-      signer.provider
-    );
-    const seaportDigestEip712 = computeDigestEip712(
-      domainSeparatorSeaport,
-      orderHash
-    );
-    const domainSeparatorGnosis = await gnosisSafe.domainSeparator();
-    // Typehash for SafeMessage(bytes message) is the result of the following solidity operation.
-    // keccak256(
-    //    "SafeMessage(bytes message)"
-    // );
-    const gnosisSafeTypeHash =
-      '0x60b3cbf8b4a223d68d641b3b6ddf9a298e7f33710cf3d3a9d1146b5a6150fbca';
-    const gnosisSafeDataHash = keccak256(
-      '0x' +
-        [
-          gnosisSafeTypeHash.slice(2),
-          keccak256(seaportDigestEip712).slice(2),
-        ].join('')
-    );
-    const gnosisSafeDigestEip712 = computeDigestEip712(
-      domainSeparatorGnosis,
-      gnosisSafeDataHash
-    );
-
-    await gnosisSafe.checkSignatures(
-      gnosisSafeDigestEip712,
-      seaportDigestEip712,
-      signatureFull
-    );
-    // TODO: Copy signature validation logic from the backend
-
-    return signatureFull;
-  }
+  // EOA signature, returns compact signature
+  const signatureCompact = ethers.utils.splitSignature(signatureFull).compact;
+  // EIP 712 Signature
+  const digest = computeDigestEip712(domainSeparatorSeaport, orderHash);
+  await validateSignature(digest, signatureCompact, components.offerer);
+  return signatureCompact;
 
   // EIP 712 Signature
   // const digest = keccak256(`0x1901${domainSeparator.slice(2)}${orderHash.slice(2)}`);
