@@ -8,14 +8,24 @@ export class DataProvider extends TypedEventEmitter<DataEventsMap> {
     id: string;
     method: DataMethod;
   }[] = [];
+  private _logger?: (message: string) => void;
 
-  constructor() {
+  constructor({
+    logger,
+    debug,
+  }: {
+    logger?: (message: string) => void;
+    debug?: boolean;
+  }) {
     super();
+    if (debug) this._logger = logger || console.log;
   }
 
   private _emitDataMessage(method: DataMethod, params: unknown) {
     if (!this._dataSocket) {
-      console.error('dataSocket not connected. Cannot send message');
+      this._logger?.(
+        '[DataProvider] Data socket not connected. Cannot send message'
+      );
       return;
     }
     const uuid = self.crypto.randomUUID();
@@ -26,6 +36,7 @@ export class DataProvider extends TypedEventEmitter<DataEventsMap> {
       id: uuid,
     };
     this._globalMessages.push({ id: uuid, method });
+    this._logger?.(`Emitting message: ${JSON.stringify(message)}`);
     this._dataSocket.emit('message', message);
   }
 
@@ -44,6 +55,12 @@ export class DataProvider extends TypedEventEmitter<DataEventsMap> {
           (m) => m.id === data.id
         )?.method;
 
+        this._logger?.(
+          `[DataProvider] For ${method}, received message: ${JSON.stringify(
+            data
+          )}`
+        );
+
         switch (method) {
           case DataMethod.hg_getMarkets:
             this.emit(DataMethod.hg_getMarkets, data.result, data.error);
@@ -60,6 +77,7 @@ export class DataProvider extends TypedEventEmitter<DataEventsMap> {
     //////////////////////////////////////////////////////////////*/
 
   requestMarkets() {
+    this._logger?.('[DataProvider] Requesting markets');
     this._emitDataMessage(DataMethod.hg_getMarkets, {});
   }
 }

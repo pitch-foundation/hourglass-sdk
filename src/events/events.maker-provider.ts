@@ -15,18 +15,30 @@ export class MakerProvider extends TypedEventEmitter<MakerEventsMap> {
     method: MakerMethod;
     accessToken: string;
   }[] = [];
+  private _logger?: (message: string) => void;
 
-  constructor() {
+  constructor({
+    logger,
+    debug,
+  }: {
+    logger?: (message: string) => void;
+    debug?: boolean;
+  }) {
     super();
+    if (debug) this._logger = logger || console.log;
   }
 
   private _emitMessage(method: MakerMethod, params: unknown) {
     if (!this._socket) {
-      console.error('Maker socket not connected. Cannot send message');
+      this._logger?.(
+        '[MakerProvider] Maker socket not connected. Cannot send message'
+      );
       return;
     }
     if (!this._accessToken) {
-      console.error('Access token not set. Cannot send message');
+      this._logger?.(
+        '[MakerProvider] Access token not set. Cannot send message'
+      );
       return;
     }
     const uuid = crypto.randomUUID();
@@ -41,6 +53,9 @@ export class MakerProvider extends TypedEventEmitter<MakerEventsMap> {
       method,
       accessToken: this._accessToken,
     });
+    this._logger?.(
+      `[MakerProvider] Emitting message: ${JSON.stringify(message)}`
+    );
     this._socket.emit('message', message);
   }
 
@@ -83,6 +98,11 @@ export class MakerProvider extends TypedEventEmitter<MakerEventsMap> {
   }) {
     if (auth.token) this._accessToken = auth.token;
     const authObj = this._getAuthObj({ auth, allowForceDisconnect });
+    this._logger?.(
+      `[MakerProvider] Connecting to ${endpoint} with auth: ${JSON.stringify(
+        authObj
+      )}`
+    );
     this._socket = io(endpoint, {
       transports: ['websocket'],
       auth: authObj,
@@ -93,6 +113,9 @@ export class MakerProvider extends TypedEventEmitter<MakerEventsMap> {
       HourglassWebsocketEvent.AccessToken,
       (data: { accessToken: string }, callback: (value: string) => void) => {
         callback('ACK');
+        this._logger?.(
+          `[MakerProvider] Received access token: ${data.accessToken}`
+        );
         this._accessToken = data.accessToken;
         this.emit(HourglassWebsocketEvent.AccessToken, data, undefined);
       }
@@ -105,6 +128,11 @@ export class MakerProvider extends TypedEventEmitter<MakerEventsMap> {
           (m) => m.id === data.id
         )?.method;
 
+        this._logger?.(
+          `[MakerProvider] For ${method}, received message: ${JSON.stringify(
+            data
+          )}`
+        );
         switch (method) {
           case MakerMethod.hg_submitQuote:
             this.emit(MakerMethod.hg_submitQuote, data.result, data.error);
@@ -132,24 +160,33 @@ export class MakerProvider extends TypedEventEmitter<MakerEventsMap> {
     this._socket.on(
       HourglassWebsocketEvent.OrderCreated,
       (data: any, callback: (value: string) => void) => {
-        this.emit(HourglassWebsocketEvent.OrderCreated, data, undefined);
         callback('ACK');
+        this._logger?.(
+          `[MakerProvider] Received order created: ${JSON.stringify(data)}`
+        );
+        this.emit(HourglassWebsocketEvent.OrderCreated, data, undefined);
       }
     );
 
     this._socket.on(
       HourglassWebsocketEvent.OrderFulfilled,
       (data: any, callback: (value: string) => void) => {
-        this.emit(HourglassWebsocketEvent.OrderFulfilled, data, undefined);
         callback('ACK');
+        this._logger?.(
+          `[MakerProvider] Received order fulfilled: ${JSON.stringify(data)}`
+        );
+        this.emit(HourglassWebsocketEvent.OrderFulfilled, data, undefined);
       }
     );
 
     this._socket.on(
       HourglassWebsocketEvent.QuoteAccepted,
       (data: any, callback: (value: string) => void) => {
-        this.emit(HourglassWebsocketEvent.QuoteAccepted, data, undefined);
         callback('ACK');
+        this._logger?.(
+          `[MakerProvider] Received quote accepted: ${JSON.stringify(data)}`
+        );
+        this.emit(HourglassWebsocketEvent.QuoteAccepted, data, undefined);
       }
     );
 
@@ -158,6 +195,11 @@ export class MakerProvider extends TypedEventEmitter<MakerEventsMap> {
       (data: any) => {
         // This event is emitted to all market makers within a market room. Since this is emitted to a room,
         // we don't need to ACK to the server.
+        this._logger?.(
+          `[MakerProvider] Received request for quote broadcast: ${JSON.stringify(
+            data
+          )}`
+        );
         this.emit(
           HourglassWebsocketEvent.RequestForQuoteBroadcast,
           data,
@@ -167,10 +209,12 @@ export class MakerProvider extends TypedEventEmitter<MakerEventsMap> {
     );
 
     this._socket.on('connect', () => {
+      this._logger?.('[MakerProvider] Connected to server');
       this.emit('connect');
     });
 
     this._socket.on('connect_error', (error) => {
+      this._logger?.('[MakerProvider] Connection error');
       this.emit('connect_error', error);
     });
 
@@ -189,14 +233,21 @@ export class MakerProvider extends TypedEventEmitter<MakerEventsMap> {
     //////////////////////////////////////////////////////////////*/
 
   submitQuote(data: { quoteAmount: string; rfqId: number }) {
+    this._logger?.(`[MakerProvider] Submitting quote: ${JSON.stringify(data)}`);
     this._emitMessage(MakerMethod.hg_submitQuote, data);
   }
 
   subscribeToMarket(data: { marketId: number }) {
+    this._logger?.(
+      `[MakerProvider] Subscribing to market: ${JSON.stringify(data)}`
+    );
     this._emitMessage(MakerMethod.hg_subscribeToMarket, data);
   }
 
   unsubscribeFromMarket(data: { marketId: number }) {
+    this._logger?.(
+      `[MakerProvider] Unsubscribing from market: ${JSON.stringify(data)}`
+    );
     this._emitMessage(MakerMethod.hg_unsubscribeFromMarket, data);
   }
 }
