@@ -232,7 +232,11 @@ export class MakerProvider extends TypedEventEmitter<MakerEventsMap> {
                               ACTIONS
     //////////////////////////////////////////////////////////////*/
 
-  submitQuote(data: { quoteAmount: string; rfqId: number }) {
+  submitQuote(data: {
+    baseAmount?: string;
+    quoteAmount?: string;
+    rfqId: number;
+  }) {
     this._logger?.(`[MakerProvider] Submitting quote: ${JSON.stringify(data)}`);
     this._emitMessage(MakerMethod.hg_submitQuote, data);
   }
