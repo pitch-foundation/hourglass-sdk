@@ -1,9 +1,12 @@
-import { Socket } from 'socket.io-client';
+import { ManagerOptions, Socket } from 'socket.io-client';
 import {
   SeaportOrderComponents,
   SeaportOrderComponentsEntity,
 } from '../seaport/seaport.types';
-import { DisconnectDescription } from 'socket.io-client/build/esm/socket';
+import {
+  DisconnectDescription,
+  SocketOptions,
+} from 'socket.io-client/build/esm/socket';
 
 export type BaseXorQuoteAmount =
   | { quoteAmount: string }
@@ -136,6 +139,15 @@ export type BestQuoteType =
           });
     };
 
+type SocketIoEventsMap = {
+  connect: [];
+  disconnect: [
+    reason: Socket.DisconnectReason,
+    description: DisconnectDescription | undefined
+  ];
+  connect_error: [error: Error];
+};
+
 export type TakerEventsMap = {
   [TakerMethod.hg_requestQuote]: [
     RequestQuoteType | undefined,
@@ -161,13 +173,7 @@ export type TakerEventsMap = {
     AccessTokenType,
     error: object | undefined
   ];
-  connect: [];
-  disconnect: [
-    reason: Socket.DisconnectReason,
-    description: DisconnectDescription | undefined
-  ];
-  connect_error: [error: Error];
-};
+} & SocketIoEventsMap;
 
 export type MakerEventsMap = {
   [MakerMethod.hg_subscribeToMarket]: [
@@ -204,13 +210,19 @@ export type MakerEventsMap = {
     AccessTokenType,
     error: object | undefined
   ];
-  connect: [];
-  disconnect: [
-    reason: Socket.DisconnectReason,
-    description: DisconnectDescription | undefined
+} & SocketIoEventsMap;
+
+export type DataEventsMap = {
+  [DataMethod.hg_getMarkets]: [
+    (
+      | {
+          markets: RFQMarket[];
+        }
+      | undefined
+    ),
+    error: object | undefined
   ];
-  connect_error: [error: Error];
-};
+} & SocketIoEventsMap;
 
 export enum TakerMethod {
   hg_requestQuote = 'hg_requestQuote',
@@ -232,25 +244,13 @@ export enum HourglassWebsocketEvent {
   BestQuote = 'BestQuote',
 }
 
-export type DataEventsMap = {
-  [DataMethod.hg_getMarkets]: [
-    (
-      | {
-          markets: RFQMarket[];
-        }
-      | undefined
-    ),
-    error: object | undefined
-  ];
-};
-
 export enum DataMethod {
   hg_getMarkets = 'hg_getMarkets',
 }
 
 export type RfqType = 'MAKER_FILLS' | 'QUOTER_FILLS';
 
-type RFQChain = 'Ethereum' | 'Fraxtal';
+type RFQChain = 'Ethereum';
 
 type RFQMarketAsset = {
   info: {
@@ -276,8 +276,30 @@ export type RFQMarket = {
 
 export type TakerSource = 'API' | 'HOURGLASS_PROTOCOL' | 'ION_PROTOCOL';
 
-export type AuthType = {
+type AuthBase = {
+  token?: string;
+  allowForceDisconnect?: boolean;
+};
+
+export type TakerAuth = AuthBase &
+  (
+    | {
+        source: 'API';
+        clientId: string;
+        clientSecret: string;
+      }
+    | {
+        source: 'HOURGLASS_PROTOCOL' | 'ION_PROTOCOL';
+        secret: string;
+      }
+  );
+
+export type MakerAuth = AuthBase & {
   clientId: string;
   clientSecret: string;
-  token?: string;
 };
+
+export type WebsocketConnectOptions = Omit<
+  Partial<ManagerOptions & SocketOptions>,
+  'transports'
+>;

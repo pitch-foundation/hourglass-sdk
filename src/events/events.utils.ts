@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events';
+import { DataMethod, MakerMethod, TakerMethod } from './events.types';
 
 export class TypedEventEmitter<TEvents extends Record<string, any>> {
   private emitter = new EventEmitter();
@@ -23,4 +24,22 @@ export class TypedEventEmitter<TEvents extends Record<string, any>> {
   ) {
     this.emitter.off(eventName, handler as any);
   }
+}
+
+export type JsonRpcMessage<M extends DataMethod | MakerMethod | TakerMethod> = {
+  jsonrpc: string; 
+  method: M,
+  params: any,
+  id: string,
+};
+
+export const createMessage = <M extends DataMethod | MakerMethod | TakerMethod>(method: M, params: any): JsonRpcMessage<M> => {
+  const uuid = crypto.randomUUID();
+  const message = {
+    jsonrpc: '2.0',
+    method: method,
+    params: params,
+    id: uuid,
+  };
+  return message;
 }
