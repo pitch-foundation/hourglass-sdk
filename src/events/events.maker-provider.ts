@@ -90,6 +90,7 @@ export class MakerProvider extends TypedEventEmitter<MakerEventsMap> {
       const request = this._findMessage(data.id);
       if (!request) {
         this._log(`Unable to locate request for message id: ${data.id}`);
+        return;
       } else {
         this._log(
           `Located response for | message: ${request.id} | method: ${
