@@ -72,9 +72,10 @@ export class DataProvider extends TypedEventEmitter<DataEventsMap> {
         );
       }
 
+      const { result, error } = data;
       switch (request?.method) {
         case DataMethod.hg_getMarkets:
-          this.emit(DataMethod.hg_getMarkets, data.result, data.error);
+          this.emit(DataMethod.hg_getMarkets, result, error);
           break;
         default:
           break;
