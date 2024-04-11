@@ -314,3 +314,13 @@ export type WebsocketConnectOptions = Omit<
 >;
 
 export type SocketOnCallback = (value: string) => void;
+
+// ----------------------------------- Providers -----------------------------------
+
+export type ProviderConstructorArgs = {
+  logger?: (message: string) => void;
+  debug?: boolean;
+  connectOpts?: WebsocketConnectOptions;
+  maxRetries?: number;
+  retryDelay?: number;
+};
