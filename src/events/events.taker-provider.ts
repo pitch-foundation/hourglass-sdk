@@ -1,8 +1,9 @@
 import { io, Socket } from 'socket.io-client';
 import { SeaportOrderComponents } from '../seaport/seaport.types';
+import { MAX_RETRY_ATTEMPTS, RETRY_DELAY } from './events.constants';
 import {
+  ExecutorAndQuoteAssetReceiver,
   JsonRpcMessage,
-  OrderExecutor,
   PayloadAccessToken,
   PayloadBestQuote,
   PayloadMessage,
@@ -17,7 +18,6 @@ import {
   WebsocketEvent,
 } from './events.types';
 import { createMessage, TypedEventEmitter } from './events.utils';
-import { MAX_RETRY_ATTEMPTS, RETRY_DELAY } from './events.constants';
 
 export class TakerProvider extends TypedEventEmitter<TakerEventsMap> {
   private _socket: Socket | undefined;
@@ -178,18 +178,24 @@ export class TakerProvider extends TypedEventEmitter<TakerEventsMap> {
                               ACTIONS
     //////////////////////////////////////////////////////////////*/
 
-  requestQuote(data: {
-    baseAssetAddress: string;
-    quoteAssetAddress: string;
-    baseAssetChainId: number;
-    quoteAssetChainId: number;
-    baseAmount?: string;
-    quoteAmount?: string;
-    quoteAssetReceiverAddress?: string;
-    executor: OrderExecutor;
-    useCase?: UseCase;
-    useCaseMetadata?: Record<string, any>;
-  }) {
+  requestQuote(
+    data: {
+      baseAssetAddress: string;
+      quoteAssetAddress: string;
+      baseAssetChainId: number;
+      quoteAssetChainId: number;
+      baseAmount?: string;
+      quoteAmount?: string;
+      useCase?: UseCase;
+      useCaseMetadata?: Record<string, any>;
+    } & ExecutorAndQuoteAssetReceiver
+  ) {
+    if (
+      (data.baseAmount && data.quoteAmount) ||
+      (!data.baseAmount && !data.quoteAmount)
+    ) {
+      throw new Error('Must specify either baseAmount XOR quoteAmount.');
+    }
     this._log(`Requesting quote: ${JSON.stringify(data)}`);
     this._emitMessage(TakerMethod.hg_requestQuote, data);
   }
