@@ -7,12 +7,14 @@ import {
   WebsocketConnectOptions,
 } from './events.types';
 import { createMessage, TypedEventEmitter } from './events.utils';
+import { MAX_RETRY_ATTEMPTS, RETRY_DELAY } from './events.constants';
 
 export class DataProvider extends TypedEventEmitter<DataEventsMap> {
   private _socket: Socket | undefined;
   private _globalMessages: JsonRpcMessage<DataMethod>[] = [];
   private _logger?: (message: string) => void;
   private _connectOpts: WebsocketConnectOptions;
+  private _retries = 0;
 
   constructor({
     logger,
@@ -100,7 +102,14 @@ export class DataProvider extends TypedEventEmitter<DataEventsMap> {
       this._log(`Disconnected: ${reason} - ${description}`);
       this.emit('disconnect', reason, description);
       // Attempt to reconnect
-      this.connect(endpoint);
+      if (this._retries > MAX_RETRY_ATTEMPTS) {
+        this._log('Max retries reached. Stopping reconnect attempts');
+        return;
+      }
+      setTimeout(() => {
+        this._retries++;
+        this.connect(endpoint);
+      }, Math.pow(2, this._retries) * RETRY_DELAY);
     });
   }
 

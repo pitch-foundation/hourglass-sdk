@@ -17,6 +17,7 @@ import {
   WebsocketEvent,
 } from './events.types';
 import { createMessage, TypedEventEmitter } from './events.utils';
+import { MAX_RETRY_ATTEMPTS, RETRY_DELAY } from './events.constants';
 
 export class TakerProvider extends TypedEventEmitter<TakerEventsMap> {
   private _socket: Socket | undefined;
@@ -24,6 +25,7 @@ export class TakerProvider extends TypedEventEmitter<TakerEventsMap> {
   private _globalMessages: JsonRpcMessage<TakerMethod>[] = [];
   private _logger?: (message: string) => void;
   private _connectOpts: WebsocketConnectOptions;
+  private _retries = 0;
 
   constructor({
     logger,
@@ -157,11 +159,18 @@ export class TakerProvider extends TypedEventEmitter<TakerEventsMap> {
       this._log(`Disconnected: ${reason} - ${description}`);
       this.emit('disconnect', reason, description);
       // Attempt to reconnect
-      this.connect({
-        // When reconnecting, we use the most recent access token rather than the one within method scope.
-        auth: { ...auth, token: this._accessToken },
-        endpoint,
-      });
+      if (this._retries > MAX_RETRY_ATTEMPTS) {
+        this._log('Max retries reached. Stopping reconnect attempts');
+        return;
+      }
+      setTimeout(() => {
+        this._retries++;
+        this.connect({
+          // When reconnecting, we use the most recent access token rather than the one within method scope.
+          auth: { ...auth, token: this._accessToken },
+          endpoint,
+        });
+      }, Math.pow(2, this._retries) * RETRY_DELAY);
     });
   }
 
