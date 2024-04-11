@@ -1,13 +1,16 @@
-import { createMessage, TypedEventEmitter } from './events.utils';
 import { io, Socket } from 'socket.io-client';
-import { DataEventsMap, DataMethod, WebsocketConnectOptions } from './events.types';
+import {
+  DataEventsMap,
+  DataMethod,
+  JsonRpcMessage,
+  PayloadMessage,
+  WebsocketConnectOptions,
+} from './events.types';
+import { createMessage, TypedEventEmitter } from './events.utils';
 
 export class DataProvider extends TypedEventEmitter<DataEventsMap> {
   private _socket: Socket | undefined;
-  private _globalMessages: {
-    id: string;
-    method: DataMethod;
-  }[] = [];
+  private _globalMessages: JsonRpcMessage<DataMethod>[] = [];
   private _logger?: (message: string) => void;
   private _connectOpts: WebsocketConnectOptions;
 
@@ -35,7 +38,7 @@ export class DataProvider extends TypedEventEmitter<DataEventsMap> {
       return;
     }
     const message = createMessage(method, params);
-    this._globalMessages.push({ id: message.id, method: message.method });
+    this._globalMessages.push(message);
     this._log(`Emitting message: ${JSON.stringify(message)}`);
     this._socket.emit('message', message);
   }
@@ -53,26 +56,34 @@ export class DataProvider extends TypedEventEmitter<DataEventsMap> {
       ...this._connectOpts,
       transports: ['websocket'],
     });
-    this._socket.on(
-      'message',
-      (data: { id: string; result: any; error: any }) => {
-        const request = this._findMessage(data.id);
-        if (!request) {
-          this._log(`Unable to locate request for message id: ${data.id}`);
-        } else {
-          this._log(`Located response for | message: ${request.id} | method: ${request.method} | data: ${JSON.stringify(data)}`);
-        }
 
-        switch (request?.method) {
-          case DataMethod.hg_getMarkets:
-            this.emit(DataMethod.hg_getMarkets, data.result, data.error);
-            break;
-          default:
-            break;
-        }
+    // ====================================================================
+    // message event
+    // ====================================================================
+    this._socket.on('message', (data: PayloadMessage) => {
+      const request = this._findMessage(data.id);
+      if (!request) {
+        this._log(`Unable to locate request for message id: ${data.id}`);
+      } else {
+        this._log(
+          `Located response for | message: ${request.id} | method: ${
+            request.method
+          } | data: ${JSON.stringify(data)}`
+        );
       }
-    );
 
+      switch (request?.method) {
+        case DataMethod.hg_getMarkets:
+          this.emit(DataMethod.hg_getMarkets, data.result, data.error);
+          break;
+        default:
+          break;
+      }
+    });
+
+    // ====================================================================
+    // Socket.io events
+    // ====================================================================
     this._socket.on('connect', () => {
       this._log('Connected to server');
       this.emit('connect');
@@ -86,6 +97,7 @@ export class DataProvider extends TypedEventEmitter<DataEventsMap> {
     this._socket.on('disconnect', (reason, description) => {
       this._log(`Disconnected: ${reason} - ${description}`);
       this.emit('disconnect', reason, description);
+      // Attempt to reconnect
       this.connect(endpoint);
     });
   }

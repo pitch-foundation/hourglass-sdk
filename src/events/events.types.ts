@@ -8,115 +8,149 @@ import {
   SocketOptions,
 } from 'socket.io-client/build/esm/socket';
 
+// ----------------------------------- Enums -----------------------------------
+
+export const UseCase = {
+  DEFAULT: 'DEFAULT',
+  ION_DELEVERAGE: 'ION_DELEVERAGE',
+  HOURGLASS_POINT_LEVERAGE: 'HOURGLASS_POINT_LEVERAGE',
+} as const;
+export type UseCase = (typeof UseCase)[keyof typeof UseCase];
+
+export const OrderExecutor = {
+  MAKER: 'MAKER',
+  TAKER: 'TAKER',
+} as const;
+export type OrderExecutor = (typeof OrderExecutor)[keyof typeof OrderExecutor];
+
+export const Chain = {
+  Ethereum: 'Ethereum',
+} as const;
+export type Chain = (typeof Chain)[keyof typeof Chain];
+
+export const TakerSource = {
+  API: 'API',
+  HOURGLASS_PROTOCOL: 'HOURGLASS_PROTOCOL',
+  ION_PROTOCOL: 'ION_PROTOCOL',
+} as const;
+export type TakerSource = (typeof TakerSource)[keyof typeof TakerSource];
+
+// ----------------------------------- Events -----------------------------------
+
+export const TakerMethod = {
+  hg_requestQuote: 'hg_requestQuote',
+  hg_acceptQuote: 'hg_acceptQuote',
+} as const;
+export type TakerMethod = (typeof TakerMethod)[keyof typeof TakerMethod];
+
+export const MakerMethod = {
+  hg_subscribeToMarket: 'hg_subscribeToMarket',
+  hg_unsubscribeFromMarket: 'hg_unsubscribeFromMarket',
+  hg_submitQuote: 'hg_submitQuote',
+} as const;
+export type MakerMethod = (typeof MakerMethod)[keyof typeof MakerMethod];
+
+export const DataMethod = {
+  hg_getMarkets: 'hg_getMarkets',
+} as const;
+export type DataMethod = (typeof DataMethod)[keyof typeof DataMethod];
+
+export const WebsocketEvent = {
+  AccessToken: 'AccessToken',
+  OrderCreated: 'OrderCreated',
+  OrderFulfilled: 'OrderFulfilled',
+  QuoteAccepted: 'QuoteAccepted',
+  RequestForQuoteBroadcast: 'RequestForQuoteBroadcast',
+  BestQuote: 'BestQuote',
+} as const;
+export type WebsocketEvent =
+  (typeof WebsocketEvent)[keyof typeof WebsocketEvent];
+
+// ----------------------------------- Authentication -----------------------------------
+
+type AuthBase = {
+  token?: string;
+  allowForceDisconnect?: boolean;
+};
+
+export type TakerAuth = AuthBase &
+  (
+    | {
+        source: typeof TakerSource.API;
+        clientId: string;
+        clientSecret: string;
+      }
+    | {
+        source: Exclude<TakerSource, typeof TakerSource.API>;
+        secret: string;
+      }
+  );
+
+export type MakerAuth = AuthBase & {
+  clientId: string;
+  clientSecret: string;
+};
+
+// ----------------------------------- Utility Types -----------------------------------
+
 export type BaseXorQuoteAmount =
   | { quoteAmount: string }
   | { baseAmount: string };
 
-export type UseCase = 'DEFAULT' | 'ION_DELEVERAGE';
-export type OrderExecutor = 'MAKER' | 'TAKER';
-
 export type ExecutorAndQuoteAssetReceiver =
   | {
-      executor: 'MAKER';
+      executor: typeof OrderExecutor.MAKER;
       quoteAssetReceiverAddress: string;
     }
   | {
-      executor: 'TAKER';
+      executor: typeof OrderExecutor.TAKER;
     };
 
-export type OrderFulfilledType = {
+export type Asset = {
   id: number;
-  createdAt: Date;
-  orderId: number;
-  orderHash: string;
-  offerer: string;
-  zone: string;
-  recipient: string;
-  block: number;
-  transactionHash: string;
-  logIndex: number;
+  info: {
+    address: string;
+    chain: Chain;
+  };
+  erc20: {
+    chain: Chain;
+    address: string;
+    name: string;
+    symbol: string;
+    description: string | null;
+    tokenDecimals: number;
+  };
 };
 
-export type OrderCreatedType = {
+export type Market = {
   id: number;
-  createdAt: string;
-  components: SeaportOrderComponentsEntity;
-  signature: string;
-  hash: string;
-  extraData: string | null;
-  inputChainId: number;
-  outputChainId: number;
-  rfqId: number;
+  name: string;
+  description: string | null;
+  rfqTtlMsecs: number;
+  defaultOrderTtlSecs: number;
+  minOrderTtlSecs: number;
+  maxOrderTtlSecs: number;
+  feeBps: number;
+  asset0Id: number;
+  asset1Id: number;
+  asset0: Asset;
+  asset1: Asset;
 };
 
-export type SubmitQuoteType = {
-  quoteId: number;
-  rfqId: number;
-  quoteAmount: string;
-  createdAt: Date;
+export type JsonRpcMessage<M extends DataMethod | MakerMethod | TakerMethod> = {
+  jsonrpc: string; 
+  method: M,
+  params: any,
+  id: string,
 };
 
-export type RequestQuoteType = {
-  rfqId: number;
-  baseAssetChainId: number;
-  quoteAssetChainId: number;
-  baseAssetAddress: string;
-  quoteAssetAddress: string;
-  ttlMsecs: number;
-  useCase: UseCase;
-} & (
-  | {
-      baseAmount: string;
-      quoteAmount: null;
-    }
-  | {
-      baseAmount: null;
-      quoteAmount: string;
-    }
-) &
-  ExecutorAndQuoteAssetReceiver;
+// ----------------------------------- Payloads - Websocket Events -----------------------------------
 
-export type RequestForQuoteBroadcastType =
-  | {
-      rfqId: number;
-      baseAssetChainId: number;
-      quoteAssetChainId: number;
-      baseAssetAddress: string;
-      quoteAssetAddress: string;
-      ttlMsecs: number;
-      useCase: UseCase;
-    } & (
-      | {
-          baseAmount: string;
-          quoteAmount: null;
-        }
-      | {
-          baseAmount: null;
-          quoteAmount: string;
-        }
-    ) &
-      ExecutorAndQuoteAssetReceiver;
-
-export type QuoteAcceptedType = {
-  quoteId: number;
-  rfqId: number;
-  seaportOrderComponents: SeaportOrderComponents;
-};
-
-export type AcceptQuoteType = {
-  quoteId: number;
-  rfqId: number;
-};
-
-export type AccessTokenType = {
+export type PayloadAccessToken = {
   accessToken: string;
 };
 
-export type UnsubscribeFromMarketType = {
-  marketId: number;
-};
-
-export type BestQuoteType =
+export type PayloadBestQuote =
   | {
       rfqId: number;
       bestQuote: null;
@@ -139,6 +173,102 @@ export type BestQuoteType =
           });
     };
 
+export type PayloadOrderCreated = {
+  id: number;
+  createdAt: string;
+  components: SeaportOrderComponentsEntity;
+  signature: string;
+  hash: string;
+  extraData: string | null;
+  inputChainId: number;
+  outputChainId: number;
+  rfqId: number;
+};
+
+export type PayloadOrderFulfilled = {
+  id: number;
+  createdAt: Date;
+  orderId: number;
+  orderHash: string;
+  offerer: string;
+  zone: string;
+  recipient: string;
+  block: number;
+  transactionHash: string;
+  logIndex: number;
+};
+
+export type PayloadQuoteAccepted = {
+  quoteId: number;
+  rfqId: number;
+  seaportOrderComponents: SeaportOrderComponents;
+};
+
+export type PayloadRequestForQuoteBroadcast = {
+  useCase: UseCase;
+  executor: OrderExecutor;
+  id: number;
+  createdAt: Date;
+  quoteAssetId: number;
+  baseAssetId: number;
+  marketId: number;
+  baseAmount: string | null;
+  quoteAmount: string | null;
+};
+
+export type PayloadMessage = { id: string; result: any; error: any };
+
+// ----------------------------------- Payloads - JSON RPC Methods - Taker API -----------------------------------
+
+export type PayloadHgRequestQuote = ExecutorAndQuoteAssetReceiver & {
+  rfqId: number;
+  baseAssetChainId: number;
+  quoteAssetChainId: number;
+  baseAssetAddress: string;
+  quoteAssetAddress: string;
+  ttlMsecs: number;
+  useCase: UseCase;
+} & (
+    | {
+        baseAmount: string;
+        quoteAmount: null;
+      }
+    | {
+        baseAmount: null;
+        quoteAmount: string;
+      }
+  );
+
+export type PayloadHgAcceptQuote = {
+  quoteId: number;
+  rfqId: number;
+};
+
+// ----------------------------------- Payloads - JSON RPC Methods - Maker API -----------------------------------
+
+export type PayloadHgSubscribeToMarket = {
+  marketId: number;
+};
+
+export type PayloadHgUnsubscribeFromMarket = {
+  marketId: number;
+};
+
+export type PayloadHgSubmitQuote = {
+  quoteId: number;
+  rfqId: number;
+  quoteAmount: string;
+  createdAt: Date;
+};
+
+// ----------------------------------- Payloads - JSON RPC Methods - Data API -----------------------------------
+
+export type PayloadHgGetMarkets = {
+  markets: Market[];
+};
+
+// ----------------------------------- DONE -----------------------------------
+
 type SocketIoEventsMap = {
   connect: [];
   disconnect: [
@@ -150,156 +280,72 @@ type SocketIoEventsMap = {
 
 export type TakerEventsMap = {
   [TakerMethod.hg_requestQuote]: [
-    RequestQuoteType | undefined,
+    PayloadHgRequestQuote | undefined,
     error: object | undefined
   ];
-  [HourglassWebsocketEvent.BestQuote]: [
-    BestQuoteType | undefined,
+  [WebsocketEvent.BestQuote]: [
+    PayloadBestQuote | undefined,
     error: object | undefined
   ];
   [TakerMethod.hg_acceptQuote]: [
-    AcceptQuoteType | undefined,
+    PayloadHgAcceptQuote | undefined,
     error: object | undefined
   ];
-  [HourglassWebsocketEvent.OrderFulfilled]: [
-    OrderFulfilledType | undefined,
+  [WebsocketEvent.OrderFulfilled]: [
+    PayloadOrderFulfilled | undefined,
     error: object | undefined
   ];
-  [HourglassWebsocketEvent.OrderCreated]: [
-    OrderCreatedType | undefined,
+  [WebsocketEvent.OrderCreated]: [
+    PayloadOrderCreated | undefined,
     error: object | undefined
   ];
-  [HourglassWebsocketEvent.AccessToken]: [
-    AccessTokenType,
-    error: object | undefined
-  ];
+  [WebsocketEvent.AccessToken]: [PayloadAccessToken, error: object | undefined];
 } & SocketIoEventsMap;
 
 export type MakerEventsMap = {
   [MakerMethod.hg_subscribeToMarket]: [
-    {
-      marketId: number;
-    },
+    PayloadHgSubscribeToMarket,
     error: object | undefined
   ];
   [MakerMethod.hg_unsubscribeFromMarket]: [
-    UnsubscribeFromMarketType,
+    PayloadHgUnsubscribeFromMarket,
     error: object | undefined
   ];
   [MakerMethod.hg_submitQuote]: [
-    SubmitQuoteType | undefined,
+    PayloadHgSubmitQuote | undefined,
     error: object | undefined
   ];
-  [HourglassWebsocketEvent.OrderFulfilled]: [
-    OrderFulfilledType | undefined,
+  [WebsocketEvent.OrderFulfilled]: [
+    PayloadOrderFulfilled | undefined,
     error: object | undefined
   ];
-  [HourglassWebsocketEvent.OrderCreated]: [
-    OrderCreatedType | undefined,
+  [WebsocketEvent.OrderCreated]: [
+    PayloadOrderCreated | undefined,
     error: object | undefined
   ];
-  [HourglassWebsocketEvent.RequestForQuoteBroadcast]: [
-    RequestForQuoteBroadcastType | undefined,
+  [WebsocketEvent.RequestForQuoteBroadcast]: [
+    PayloadRequestForQuoteBroadcast | undefined,
     error: object | undefined
   ];
-  [HourglassWebsocketEvent.QuoteAccepted]: [
-    QuoteAcceptedType | undefined,
+  [WebsocketEvent.QuoteAccepted]: [
+    PayloadQuoteAccepted | undefined,
     error: object | undefined
   ];
-  [HourglassWebsocketEvent.AccessToken]: [
-    AccessTokenType,
-    error: object | undefined
-  ];
+  [WebsocketEvent.AccessToken]: [PayloadAccessToken, error: object | undefined];
 } & SocketIoEventsMap;
 
 export type DataEventsMap = {
   [DataMethod.hg_getMarkets]: [
-    (
-      | {
-          markets: RFQMarket[];
-        }
-      | undefined
-    ),
+    PayloadHgGetMarkets | undefined,
     error: object | undefined
   ];
 } & SocketIoEventsMap;
 
-export enum TakerMethod {
-  hg_requestQuote = 'hg_requestQuote',
-  hg_acceptQuote = 'hg_acceptQuote',
-}
-
-export enum MakerMethod {
-  hg_subscribeToMarket = 'hg_subscribeToMarket',
-  hg_unsubscribeFromMarket = 'hg_unsubscribeFromMarket',
-  hg_submitQuote = 'hg_submitQuote',
-}
-
-export enum HourglassWebsocketEvent {
-  AccessToken = 'AccessToken',
-  OrderCreated = 'OrderCreated',
-  OrderFulfilled = 'OrderFulfilled',
-  QuoteAccepted = 'QuoteAccepted',
-  RequestForQuoteBroadcast = 'RequestForQuoteBroadcast',
-  BestQuote = 'BestQuote',
-}
-
-export enum DataMethod {
-  hg_getMarkets = 'hg_getMarkets',
-}
-
-export type RfqType = 'MAKER_FILLS' | 'QUOTER_FILLS';
-
-type RFQChain = 'Ethereum';
-
-type RFQMarketAsset = {
-  info: {
-    assetId: number;
-    address: string;
-    chain: RFQChain;
-  };
-  erc20: {
-    id: number;
-    chain: RFQChain;
-    address: string;
-    name: string;
-    symbol: string;
-    description: string | null;
-    tokenDecimals: number;
-  } | null;
-};
-
-export type RFQMarket = {
-  asset0: RFQMarketAsset;
-  asset1: RFQMarketAsset;
-};
-
-export type TakerSource = 'API' | 'HOURGLASS_PROTOCOL' | 'ION_PROTOCOL';
-
-type AuthBase = {
-  token?: string;
-  allowForceDisconnect?: boolean;
-};
-
-export type TakerAuth = AuthBase &
-  (
-    | {
-        source: 'API';
-        clientId: string;
-        clientSecret: string;
-      }
-    | {
-        source: 'HOURGLASS_PROTOCOL' | 'ION_PROTOCOL';
-        secret: string;
-      }
-  );
-
-export type MakerAuth = AuthBase & {
-  clientId: string;
-  clientSecret: string;
-};
+// ----------------------------------- Socket.io -----------------------------------
 
 export type WebsocketConnectOptions = Omit<
   Partial<ManagerOptions & SocketOptions>,
   'transports'
 >;
+
+export type SocketOnCallback = (value: string) => void;
