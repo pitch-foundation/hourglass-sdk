@@ -10,12 +10,16 @@ import {
   PayloadOrderFulfilled,
   PayloadQuoteAccepted,
   PayloadRequestForQuoteBroadcast,
+  ProviderConstructorArgs,
   SocketOnCallback,
   WebsocketConnectOptions,
   WebsocketEvent,
 } from './events.types';
-import { createMessage, TypedEventEmitter } from './events.utils';
-import { MAX_RETRY_ATTEMPTS, RETRY_DELAY } from './events.constants';
+import {
+  createMessage,
+  getProviderDefaultArgs,
+  TypedEventEmitter,
+} from './events.utils';
 
 export class MakerProvider extends TypedEventEmitter<MakerEventsMap> {
   private _socket: Socket | undefined;
@@ -24,19 +28,17 @@ export class MakerProvider extends TypedEventEmitter<MakerEventsMap> {
   private _logger?: (message: string) => void;
   private _connectOpts: WebsocketConnectOptions;
   private _retries = 0;
+  private _retryDelay: number;
+  private _maxRetries: number;
 
-  constructor({
-    logger,
-    debug,
-    connectOpts,
-  }: {
-    logger?: (message: string) => void;
-    debug?: boolean;
-    connectOpts?: WebsocketConnectOptions;
-  }) {
+  constructor(args: ProviderConstructorArgs) {
     super();
-    if (debug) this._logger = logger || console.log;
-    this._connectOpts = connectOpts ?? {};
+    const { logger, connectOpts, retryDelay, maxRetries } =
+      getProviderDefaultArgs(args);
+    this._logger = logger;
+    this._connectOpts = connectOpts;
+    this._retryDelay = retryDelay;
+    this._maxRetries = maxRetries;
   }
 
   private _log(msg: string) {
@@ -173,7 +175,7 @@ export class MakerProvider extends TypedEventEmitter<MakerEventsMap> {
       this._log(`Disconnected: ${reason} - ${description}`);
       this.emit('disconnect', reason, description);
       // Attempt to reconnect
-      if (this._retries > MAX_RETRY_ATTEMPTS) {
+      if (this._retries > this._maxRetries) {
         this._log('Max retries reached. Stopping reconnect attempts');
         return;
       }
@@ -184,7 +186,7 @@ export class MakerProvider extends TypedEventEmitter<MakerEventsMap> {
           auth: { ...auth, token: this._accessToken },
           endpoint,
         });
-      }, Math.pow(2, this._retries) * RETRY_DELAY);
+      }, Math.pow(2, this._retries) * this._retryDelay);
     });
   }
 

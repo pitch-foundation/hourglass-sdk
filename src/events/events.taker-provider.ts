@@ -1,13 +1,14 @@
 import { io, Socket } from 'socket.io-client';
 import { SeaportOrderComponents } from '../seaport/seaport.types';
 import {
+  ExecutorAndQuoteAssetReceiver,
   JsonRpcMessage,
-  OrderExecutor,
   PayloadAccessToken,
   PayloadBestQuote,
   PayloadMessage,
   PayloadOrderCreated,
   PayloadOrderFulfilled,
+  ProviderConstructorArgs,
   SocketOnCallback,
   TakerAuth,
   TakerEventsMap,
@@ -16,8 +17,11 @@ import {
   WebsocketConnectOptions,
   WebsocketEvent,
 } from './events.types';
-import { createMessage, TypedEventEmitter } from './events.utils';
-import { MAX_RETRY_ATTEMPTS, RETRY_DELAY } from './events.constants';
+import {
+  createMessage,
+  getProviderDefaultArgs,
+  TypedEventEmitter,
+} from './events.utils';
 
 export class TakerProvider extends TypedEventEmitter<TakerEventsMap> {
   private _socket: Socket | undefined;
@@ -26,19 +30,17 @@ export class TakerProvider extends TypedEventEmitter<TakerEventsMap> {
   private _logger?: (message: string) => void;
   private _connectOpts: WebsocketConnectOptions;
   private _retries = 0;
+  private _retryDelay: number;
+  private _maxRetries: number;
 
-  constructor({
-    logger,
-    debug,
-    connectOpts,
-  }: {
-    logger?: (message: string) => void;
-    debug?: boolean;
-    connectOpts?: WebsocketConnectOptions;
-  }) {
+  constructor(args: ProviderConstructorArgs) {
     super();
-    if (debug) this._logger = logger ?? console.log;
-    this._connectOpts = connectOpts ?? {};
+    const { logger, connectOpts, retryDelay, maxRetries } =
+      getProviderDefaultArgs(args);
+    this._logger = logger;
+    this._connectOpts = connectOpts;
+    this._retryDelay = retryDelay;
+    this._maxRetries = maxRetries;
   }
 
   private _log(msg: string) {
@@ -159,7 +161,7 @@ export class TakerProvider extends TypedEventEmitter<TakerEventsMap> {
       this._log(`Disconnected: ${reason} - ${description}`);
       this.emit('disconnect', reason, description);
       // Attempt to reconnect
-      if (this._retries > MAX_RETRY_ATTEMPTS) {
+      if (this._retries > this._maxRetries) {
         this._log('Max retries reached. Stopping reconnect attempts');
         return;
       }
@@ -170,7 +172,7 @@ export class TakerProvider extends TypedEventEmitter<TakerEventsMap> {
           auth: { ...auth, token: this._accessToken },
           endpoint,
         });
-      }, Math.pow(2, this._retries) * RETRY_DELAY);
+      }, Math.pow(2, this._retries) * this._retryDelay);
     });
   }
 
@@ -178,18 +180,24 @@ export class TakerProvider extends TypedEventEmitter<TakerEventsMap> {
                               ACTIONS
     //////////////////////////////////////////////////////////////*/
 
-  requestQuote(data: {
-    baseAssetAddress: string;
-    quoteAssetAddress: string;
-    baseAssetChainId: number;
-    quoteAssetChainId: number;
-    baseAmount?: string;
-    quoteAmount?: string;
-    quoteAssetReceiverAddress?: string;
-    executor: OrderExecutor;
-    useCase?: UseCase;
-    useCaseMetadata?: Record<string, any>;
-  }) {
+  requestQuote(
+    data: {
+      baseAssetAddress: string;
+      quoteAssetAddress: string;
+      baseAssetChainId: number;
+      quoteAssetChainId: number;
+      baseAmount?: string;
+      quoteAmount?: string;
+      useCase?: UseCase;
+      useCaseMetadata?: Record<string, any>;
+    } & ExecutorAndQuoteAssetReceiver
+  ) {
+    if (
+      (data.baseAmount && data.quoteAmount) ||
+      (!data.baseAmount && !data.quoteAmount)
+    ) {
+      throw new Error('Must specify either baseAmount XOR quoteAmount.');
+    }
     this._log(`Requesting quote: ${JSON.stringify(data)}`);
     this._emitMessage(TakerMethod.hg_requestQuote, data);
   }

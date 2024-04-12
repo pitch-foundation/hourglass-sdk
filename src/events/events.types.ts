@@ -138,10 +138,10 @@ export type Market = {
 };
 
 export type JsonRpcMessage<M extends DataMethod | MakerMethod | TakerMethod> = {
-  jsonrpc: string; 
-  method: M,
-  params: any,
-  id: string,
+  jsonrpc: string;
+  method: M;
+  params: any;
+  id: string;
 };
 
 // ----------------------------------- Payloads - Websocket Events -----------------------------------
@@ -267,7 +267,11 @@ export type PayloadHgGetMarkets = {
   markets: Market[];
 };
 
-// ----------------------------------- DONE -----------------------------------
+// ----------------------------------- Event Maps -----------------------------------
+
+export type EventsMapEntryArgs<T extends any> =
+  | [data: T, error: undefined]
+  | [data: undefined, error: object];
 
 type SocketIoEventsMap = {
   connect: [];
@@ -279,66 +283,27 @@ type SocketIoEventsMap = {
 };
 
 export type TakerEventsMap = {
-  [TakerMethod.hg_requestQuote]: [
-    PayloadHgRequestQuote | undefined,
-    error: object | undefined
-  ];
-  [WebsocketEvent.BestQuote]: [
-    PayloadBestQuote | undefined,
-    error: object | undefined
-  ];
-  [TakerMethod.hg_acceptQuote]: [
-    PayloadHgAcceptQuote | undefined,
-    error: object | undefined
-  ];
-  [WebsocketEvent.OrderFulfilled]: [
-    PayloadOrderFulfilled | undefined,
-    error: object | undefined
-  ];
-  [WebsocketEvent.OrderCreated]: [
-    PayloadOrderCreated | undefined,
-    error: object | undefined
-  ];
-  [WebsocketEvent.AccessToken]: [PayloadAccessToken, error: object | undefined];
+  [TakerMethod.hg_requestQuote]: EventsMapEntryArgs<PayloadHgRequestQuote>;
+  [WebsocketEvent.BestQuote]: EventsMapEntryArgs<PayloadBestQuote>;
+  [TakerMethod.hg_acceptQuote]: EventsMapEntryArgs<PayloadHgAcceptQuote>;
+  [WebsocketEvent.OrderFulfilled]: EventsMapEntryArgs<PayloadOrderFulfilled>;
+  [WebsocketEvent.OrderCreated]: EventsMapEntryArgs<PayloadOrderCreated>;
+  [WebsocketEvent.AccessToken]: EventsMapEntryArgs<PayloadAccessToken>;
 } & SocketIoEventsMap;
 
 export type MakerEventsMap = {
-  [MakerMethod.hg_subscribeToMarket]: [
-    PayloadHgSubscribeToMarket,
-    error: object | undefined
-  ];
-  [MakerMethod.hg_unsubscribeFromMarket]: [
-    PayloadHgUnsubscribeFromMarket,
-    error: object | undefined
-  ];
-  [MakerMethod.hg_submitQuote]: [
-    PayloadHgSubmitQuote | undefined,
-    error: object | undefined
-  ];
-  [WebsocketEvent.OrderFulfilled]: [
-    PayloadOrderFulfilled | undefined,
-    error: object | undefined
-  ];
-  [WebsocketEvent.OrderCreated]: [
-    PayloadOrderCreated | undefined,
-    error: object | undefined
-  ];
-  [WebsocketEvent.RequestForQuoteBroadcast]: [
-    PayloadRequestForQuoteBroadcast | undefined,
-    error: object | undefined
-  ];
-  [WebsocketEvent.QuoteAccepted]: [
-    PayloadQuoteAccepted | undefined,
-    error: object | undefined
-  ];
-  [WebsocketEvent.AccessToken]: [PayloadAccessToken, error: object | undefined];
+  [MakerMethod.hg_subscribeToMarket]: EventsMapEntryArgs<PayloadHgSubscribeToMarket>;
+  [MakerMethod.hg_unsubscribeFromMarket]: EventsMapEntryArgs<PayloadHgUnsubscribeFromMarket>;
+  [MakerMethod.hg_submitQuote]: EventsMapEntryArgs<PayloadHgSubmitQuote>;
+  [WebsocketEvent.OrderFulfilled]: EventsMapEntryArgs<PayloadOrderFulfilled>;
+  [WebsocketEvent.OrderCreated]: EventsMapEntryArgs<PayloadOrderCreated>;
+  [WebsocketEvent.RequestForQuoteBroadcast]: EventsMapEntryArgs<PayloadRequestForQuoteBroadcast>;
+  [WebsocketEvent.QuoteAccepted]: EventsMapEntryArgs<PayloadQuoteAccepted>;
+  [WebsocketEvent.AccessToken]: EventsMapEntryArgs<PayloadAccessToken>;
 } & SocketIoEventsMap;
 
 export type DataEventsMap = {
-  [DataMethod.hg_getMarkets]: [
-    PayloadHgGetMarkets | undefined,
-    error: object | undefined
-  ];
+  [DataMethod.hg_getMarkets]: EventsMapEntryArgs<PayloadHgGetMarkets>;
 } & SocketIoEventsMap;
 
 // ----------------------------------- Socket.io -----------------------------------
@@ -349,3 +314,13 @@ export type WebsocketConnectOptions = Omit<
 >;
 
 export type SocketOnCallback = (value: string) => void;
+
+// ----------------------------------- Providers -----------------------------------
+
+export type ProviderConstructorArgs = {
+  logger?: (message: string) => void;
+  debug?: boolean;
+  connectOpts?: WebsocketConnectOptions;
+  maxRetries?: number;
+  retryDelay?: number;
+};

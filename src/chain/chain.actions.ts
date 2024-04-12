@@ -12,13 +12,15 @@ export const approveAmount = async ({
   signer,
   tokenAddress,
   amount,
+  spender = STAKING_ADDRESSES.seaportConduit,
 }: {
   signer: JsonRpcSigner;
   tokenAddress: string;
   amount: BigNumber;
+  spender?: string;
 }) => {
-  const assetInstance = ERC20__factory.connect(tokenAddress, signer);
-  return assetInstance.approve(STAKING_ADDRESSES.seaportConduit, amount);
+  const erc20 = ERC20__factory.connect(tokenAddress, signer);
+  return erc20.approve(spender, amount);
 };
 
 export const acceptOrder = async ({
@@ -41,38 +43,4 @@ export const acceptOrder = async ({
     components: seaportOrderComponents,
     signature,
   });
-};
-
-export const signAuthMessage = async (signer: JsonRpcSigner) => {
-  const address = await signer.getAddress();
-  // All properties on a domain are optional
-  const domain = {
-    name: 'hourglass',
-    version: '1.0',
-  };
-
-  // The named list of all type definitions
-  const types = {
-    // EIP712Domain: [
-    //   {
-    //     name: "name",
-    //     type: "string",
-    //   },
-    //   {
-    //     name: "version",
-    //     type: "string",
-    //   },
-    // ],
-    AuthMessage: [
-      {
-        name: 'address',
-        type: 'address',
-      },
-    ],
-  };
-
-  // The data to sign
-  const message = { address };
-  const signature = await signer._signTypedData(domain, types, message);
-  return signature;
 };
