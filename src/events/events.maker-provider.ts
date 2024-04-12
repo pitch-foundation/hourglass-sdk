@@ -30,15 +30,23 @@ export class MakerProvider extends TypedEventEmitter<MakerEventsMap> {
   private _retries = 0;
   private _retryDelay: number;
   private _maxRetries: number;
+  private _connectionStabilityThreshold: number;
+  private _connectionStableTimer?: ReturnType<typeof setTimeout>;
 
   constructor(args: ProviderConstructorArgs) {
     super();
-    const { logger, connectOpts, retryDelay, maxRetries } =
-      getProviderDefaultArgs(args);
+    const {
+      logger,
+      connectOpts,
+      retryDelay,
+      maxRetries,
+      connectionStabilityThreshold,
+    } = getProviderDefaultArgs(args);
     this._logger = logger;
     this._connectOpts = connectOpts;
     this._retryDelay = retryDelay;
     this._maxRetries = maxRetries;
+    this._connectionStabilityThreshold = connectionStabilityThreshold;
   }
 
   private _log(msg: string) {
@@ -164,6 +172,12 @@ export class MakerProvider extends TypedEventEmitter<MakerEventsMap> {
     this._socket.on('connect', () => {
       this._log('Connected to server');
       this.emit('connect');
+
+      // Start the connection stability timer
+      this._connectionStableTimer = setTimeout(() => {
+        this._log('Connection deemed stable. Resetting retry counter.');
+        this._retries = 0; // Reset the retry counter if the connection is stable
+      }, this._connectionStabilityThreshold);
     });
 
     this._socket.on('connect_error', (error) => {
@@ -174,6 +188,11 @@ export class MakerProvider extends TypedEventEmitter<MakerEventsMap> {
     this._socket.on('disconnect', (reason, description) => {
       this._log(`Disconnected: ${reason} - ${description}`);
       this.emit('disconnect', reason, description);
+      // Clear the stability timer if the connection drops before becoming stable
+      if (this._connectionStableTimer) {
+        clearTimeout(this._connectionStableTimer);
+        this._connectionStableTimer = undefined;
+      }
       // Attempt to reconnect
       if (this._retries > this._maxRetries) {
         this._log('Max retries reached. Stopping reconnect attempts');

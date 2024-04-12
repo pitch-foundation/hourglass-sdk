@@ -142,6 +142,7 @@ export const getProviderDefaultArgs = ({
   connectOpts,
   retryDelay,
   maxRetries,
+  connectionStabilityThreshold,
 }: ProviderConstructorArgs) => {
   return {
     logger: debug ? logger ?? console.log : undefined,
@@ -149,5 +150,6 @@ export const getProviderDefaultArgs = ({
     connectOpts: connectOpts ?? {},
     retryDelay: retryDelay ?? RETRY_DELAY,
     maxRetries: maxRetries ?? MAX_RETRY_ATTEMPTS,
+    connectionStabilityThreshold: connectionStabilityThreshold ?? 5000,
   };
 };

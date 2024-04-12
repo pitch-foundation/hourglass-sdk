@@ -323,4 +323,5 @@ export type ProviderConstructorArgs = {
   connectOpts?: WebsocketConnectOptions;
   maxRetries?: number;
   retryDelay?: number;
+  connectionStabilityThreshold: number;
 };
