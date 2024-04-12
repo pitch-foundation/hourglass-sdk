@@ -5,27 +5,22 @@ import {
   signSeaportOrderComponents,
 } from '../seaport/seaport.utils';
 import { BigNumber } from 'ethers';
-import { EventsProvider } from '../events/events.provider';
+import { TakerProvider } from '../events/events.taker-provider';
 import { SeaportOrderComponents } from '../seaport/seaport.types';
 
 export const approveAmount = async ({
   signer,
   tokenAddress,
   amount,
+  spender = STAKING_ADDRESSES.seaportConduit,
 }: {
   signer: JsonRpcSigner;
   tokenAddress: string;
-  amount: BigNumber | null;
+  amount: BigNumber;
+  spender?: string;
 }) => {
-  if (!signer || !amount) return;
-
-  const assetInstance = ERC20__factory.connect(tokenAddress, signer);
-  const { wait } = await assetInstance.approve(
-    STAKING_ADDRESSES.seaportConduit,
-    amount
-  );
-  const result = await wait();
-  if (result.status !== 1) throw new Error('Transaction failed');
+  const erc20 = ERC20__factory.connect(tokenAddress, signer);
+  return erc20.approve(spender, amount);
 };
 
 export const acceptOrder = async ({
@@ -36,51 +31,16 @@ export const acceptOrder = async ({
 }: {
   signer: JsonRpcSigner;
   seaportOrderComponents: SeaportOrderComponents;
-  provider: EventsProvider;
+  provider: TakerProvider;
   quoteId: number;
 }) => {
   const signature = await signSeaportOrderComponents(
     signer,
-    seaportOrderComponents,
-    false
+    seaportOrderComponents
   );
   provider.acceptQuote({
     quoteId,
     components: seaportOrderComponents,
     signature,
   });
-};
-
-export const signAuthMessage = async (signer: JsonRpcSigner) => {
-  const address = await signer.getAddress();
-  // All properties on a domain are optional
-  const domain = {
-    name: 'hourglass',
-    version: '1.0',
-  };
-
-  // The named list of all type definitions
-  const types = {
-    // EIP712Domain: [
-    //   {
-    //     name: "name",
-    //     type: "string",
-    //   },
-    //   {
-    //     name: "version",
-    //     type: "string",
-    //   },
-    // ],
-    AuthMessage: [
-      {
-        name: 'address',
-        type: 'address',
-      },
-    ],
-  };
-
-  // The data to sign
-  const message = { address };
-  const signature = await signer._signTypedData(domain, types, message);
-  return signature;
 };
