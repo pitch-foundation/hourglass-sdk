@@ -13,65 +13,6 @@ import {
   TypedEventEmitter,
 } from './events.utils';
 
-// ====================================================================
-// New implementation leveraging a factory with a generic class
-// ====================================================================
-
-// export class DataProvider extends ProviderBaseFactory<
-//   DataEventsMap,
-//   DataMethod
-// >() {
-//   /*//////////////////////////////////////////////////////////////
-//                               CONNECT
-//     //////////////////////////////////////////////////////////////*/
-//   connect(endpoint: string) {
-//     // Creates the socket, set's up listeners for socket.io events.
-//     super.connect(endpoint);
-//     if (!this._socket) {
-//       return;
-//     }
-
-//     // ====================================================================
-//     // message event
-//     // ====================================================================
-//     this._socket.on('message', (data: PayloadMessage) => {
-//       const request = this._findMessage(data.id);
-//       if (!request) {
-//         this._log(`Unable to locate request for message id: ${data.id}`);
-//         return;
-//       } else {
-//         this._log(
-//           `Located response for | message: ${request.id} | method: ${
-//             request.method
-//           } | data: ${JSON.stringify(data)}`
-//         );
-//       }
-
-//       const { result, error } = data;
-//       switch (request?.method) {
-//         case DataMethod.hg_getMarkets:
-//           this.emit(DataMethod.hg_getMarkets, result, error);
-//           break;
-//         default:
-//           break;
-//       }
-//     });
-//   }
-
-//   /*//////////////////////////////////////////////////////////////
-//                               ACTIONS
-//     //////////////////////////////////////////////////////////////*/
-
-//   requestMarkets() {
-//     this._log('Requesting markets');
-//     this._emitMessage(DataMethod.hg_getMarkets, {});
-//   }
-// }
-
-// ====================================================================
-// Old implementation leveraging a factory with a generic class
-// ====================================================================
-
 export class DataProvider extends TypedEventEmitter<DataEventsMap> {
   private _socket: Socket | undefined;
   private _globalMessages: JsonRpcMessage<DataMethod>[] = [];
@@ -201,3 +142,58 @@ export class DataProvider extends TypedEventEmitter<DataEventsMap> {
     this._emitMessage(DataMethod.hg_getMarkets, {});
   }
 }
+
+// ====================================================================
+// New implementation leveraging a factory with a generic class
+// ====================================================================
+
+// export class DataProvider extends ProviderBaseFactory<
+//   DataEventsMap,
+//   DataMethod
+// >() {
+//   /*//////////////////////////////////////////////////////////////
+//                               CONNECT
+//     //////////////////////////////////////////////////////////////*/
+//   connect(endpoint: string) {
+//     // Creates the socket, set's up listeners for socket.io events.
+//     super.connect(endpoint);
+//     if (!this._socket) {
+//       return;
+//     }
+
+//     // ====================================================================
+//     // message event
+//     // ====================================================================
+//     this._socket.on('message', (data: PayloadMessage) => {
+//       const request = this._findMessage(data.id);
+//       if (!request) {
+//         this._log(`Unable to locate request for message id: ${data.id}`);
+//         return;
+//       } else {
+//         this._log(
+//           `Located response for | message: ${request.id} | method: ${
+//             request.method
+//           } | data: ${JSON.stringify(data)}`
+//         );
+//       }
+
+//       const { result, error } = data;
+//       switch (request?.method) {
+//         case DataMethod.hg_getMarkets:
+//           this.emit(DataMethod.hg_getMarkets, result, error);
+//           break;
+//         default:
+//           break;
+//       }
+//     });
+//   }
+
+//   /*//////////////////////////////////////////////////////////////
+//                               ACTIONS
+//     //////////////////////////////////////////////////////////////*/
+
+//   requestMarkets() {
+//     this._log('Requesting markets');
+//     this._emitMessage(DataMethod.hg_getMarkets, {});
+//   }
+// }
