@@ -80,20 +80,10 @@ export class MakerProvider extends BaseProvider<
     this.socket.on('message', (data: PayloadMessage) => {
       const msg = this.findMessage(data.id);
       if (!msg) return;
-
-      const { result, error } = data;
-      switch (msg?.method) {
-        case MakerMethod.hg_submitQuote:
-          this.emit(MakerMethod.hg_submitQuote, result, error);
-          break;
-        case MakerMethod.hg_subscribeToMarket:
-          this.emit(MakerMethod.hg_subscribeToMarket, result, error);
-          break;
-        case MakerMethod.hg_unsubscribeFromMarket:
-          this.emit(MakerMethod.hg_unsubscribeFromMarket, result, error);
-          break;
-        default:
-          break;
+      if (Object.values(MakerMethod).includes(msg.method)) {
+        this.emit(msg.method, data.result, data.error);
+      } else {
+        this.log(`Found incoming message but method unknown: ${msg.method}`);
       }
     });
   }

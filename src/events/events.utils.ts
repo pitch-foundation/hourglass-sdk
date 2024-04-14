@@ -46,7 +46,7 @@ class ReconnectionState {
   timeout: ReturnType<typeof setTimeout> | undefined;
   accessToken?: string;
 
-  constructor(readonly retryDelay: number) {
+  constructor(readonly retryDelayMsecs: number) {
     this.retries = 0;
     this.timeout = undefined;
   }
@@ -65,7 +65,7 @@ class ReconnectionState {
 
   setupReconnectTimeout(callback: (accessToken?: string) => void) {
     // Injects the most recent access token into the reconnect callback
-    const delayMsecs = Math.pow(2, this.retries++) * this.retryDelay;
+    const delayMsecs = Math.pow(2, this.retries++) * this.retryDelayMsecs;
     console.log(`Reconnecting in ${delayMsecs / 1000} secs`);
     this.timeout = setTimeout(() => callback(this.accessToken), delayMsecs);
   }
@@ -85,16 +85,15 @@ export class BaseProvider<
   protected globalMessages: JsonRpcMessage<TMethod>[] = [];
   protected logger?: (message: string) => void;
   protected connectOpts: WebsocketConnectOptions;
-  // TODO: We should rename to make it clear this is in milliseconds
-  protected retryDelay: number;
+  protected retryDelayMsecs: number;
   protected maxRetries: number;
 
   constructor(args: ProviderConstructorArgs) {
     super();
-    const { logger, debug, connectOpts, retryDelay, maxRetries } = args;
+    const { logger, debug, connectOpts, retryDelayMsecs, maxRetries } = args;
     this.logger = debug ? logger ?? console.log : undefined;
     this.connectOpts = connectOpts ?? {};
-    this.retryDelay = retryDelay ?? RETRY_DELAY;
+    this.retryDelayMsecs = retryDelayMsecs ?? RETRY_DELAY;
     this.maxRetries = maxRetries ?? MAX_RETRY_ATTEMPTS;
     this.log(`initialized | ${JSON.stringify(args)}`);
   }
@@ -150,16 +149,13 @@ export class BaseProvider<
       if (this.socket.connected) {
         // Existing socket is connected, force disconnect
         this.log(
-          `Disconnecting existing socket ${this.socket.id} to establish new connection (retries: ${rs.retries}).`
+          `Disconnecting existing socket ${this.socket.id} to establish new connection.`
         );
         // When the 'disconnect' event is emitted, the the reason will be 'io client disconnect'
         // We check for this in the handler for this event and skip retries in this scenario.
         this.socket.disconnect();
-        this.socket.removeAllListeners(); // TODO: maybe not necessary after disconnect
-      } else {
-        // Existing socket is disconnected, no need to disconnect
-        this.socket.removeAllListeners();
       }
+      this.socket.removeAllListeners();
       this.socket = undefined;
     }
 
@@ -224,7 +220,11 @@ export class BaseProvider<
     });
 
     socket.on('disconnect', (reason, description) => {
-      this.log(`Disconnected: ${reason} - ${JSON.stringify(description)}`);
+      this.log(
+        `Disconnected: ${reason} - ${
+          description ? JSON.stringify(description) : description
+        }`
+      );
       this.emit('disconnect', reason, description);
 
       // If we called socket.disconnect() explicitly, we don't want to reconnect
@@ -249,7 +249,7 @@ export class BaseProvider<
     // has it's own scoped state for reconnection attempts. Additionally, subclasses can
     // inject the most recent access token into the reconnection state object when an
     // AccessToken event is emitted. This enables session re-establishment.
-    const rs = new ReconnectionState(this.retryDelay);
+    const rs = new ReconnectionState(this.retryDelayMsecs);
     this.connectScoped(endpoint, auth, rs);
     return rs;
   }
