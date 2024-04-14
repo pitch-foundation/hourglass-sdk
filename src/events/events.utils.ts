@@ -81,12 +81,12 @@ export class BaseProvider<
   TMethod extends DataMethod | MakerMethod | TakerMethod,
   TAuth extends MakerAuth | TakerAuth | null
 > extends TypedEventEmitter<TEvents> {
-  protected socket: Socket | undefined;
-  protected globalMessages: JsonRpcMessage<TMethod>[] = [];
-  protected logger?: (message: string) => void;
-  protected connectOpts: WebsocketConnectOptions;
-  protected retryDelayMsecs: number;
-  protected maxRetries: number;
+  private socket: Socket | undefined;
+  private globalMessages: JsonRpcMessage<TMethod>[] = [];
+  private logger?: (message: string) => void;
+  private connectOpts: WebsocketConnectOptions;
+  private retryDelayMsecs: number;
+  private maxRetries: number;
 
   constructor(args: ProviderConstructorArgs) {
     super();
