@@ -1,3 +1,4 @@
+import { Socket } from 'socket.io-client';
 import { SeaportOrderComponents } from '../seaport/seaport.types';
 import {
   ExecutorAndQuoteAssetReceiver,
@@ -13,7 +14,7 @@ import {
   UseCase,
   WebsocketEvent,
 } from './events.types';
-import { BaseProvider } from './events.utils';
+import { BaseProvider, ReconnectionState } from './events.utils';
 
 export class TakerProvider extends BaseProvider<
   TakerEventsMap,
@@ -24,23 +25,18 @@ export class TakerProvider extends BaseProvider<
                               CONNECT
     //////////////////////////////////////////////////////////////*/
 
-  connect({ auth, endpoint }: { auth: TakerAuth; endpoint: string }) {
-    const rs = super.connectEntrypoint(endpoint, auth);
-    if (!this.socket) {
-      return;
-    }
-
-    this.socket.on(
+  setupListeners(socket: Socket, rs: ReconnectionState) {
+    socket.on(
       WebsocketEvent.AccessToken,
       (data: PayloadAccessToken, callback: SocketOnCallback) => {
-        callback('ACK');
         this.log(`Received access token: ${data.accessToken}`);
         rs.setAccessToken(data.accessToken);
         this.emit(WebsocketEvent.AccessToken, data, undefined);
+        callback('ACK');
       }
     );
 
-    this.socket.on(
+    socket.on(
       WebsocketEvent.BestQuote,
       (data: PayloadBestQuote, callback: SocketOnCallback) => {
         this.log(`Received best quote: ${JSON.stringify(data)}`);
@@ -49,7 +45,7 @@ export class TakerProvider extends BaseProvider<
       }
     );
 
-    this.socket.on(
+    socket.on(
       WebsocketEvent.OrderFulfilled,
       (data: PayloadOrderFulfilled, callback: SocketOnCallback) => {
         this.log(`Received order fulfilled: ${JSON.stringify(data)}`);
@@ -58,7 +54,7 @@ export class TakerProvider extends BaseProvider<
       }
     );
 
-    this.socket.on(
+    socket.on(
       WebsocketEvent.OrderCreated,
       (data: PayloadOrderCreated, callback: SocketOnCallback) => {
         this.log(`Received order created: ${JSON.stringify(data)}`);
@@ -67,7 +63,7 @@ export class TakerProvider extends BaseProvider<
       }
     );
 
-    this.socket.on('message', (data: PayloadMessage) => {
+    socket.on('message', (data: PayloadMessage) => {
       const msg = this.findMessage(data.id);
       if (!msg) return;
       if (Object.values(TakerMethod).includes(msg.method)) {
@@ -76,6 +72,10 @@ export class TakerProvider extends BaseProvider<
         this.log(`Found incoming message but method unknown: ${msg.method}`);
       }
     });
+  }
+
+  connect({ auth, endpoint }: { auth: TakerAuth; endpoint: string }) {
+    super.connectEntrypoint({ endpoint, auth });
   }
 
   /*//////////////////////////////////////////////////////////////

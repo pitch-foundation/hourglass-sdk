@@ -40,7 +40,7 @@ class TypedEventEmitter<TEvents extends Record<string, Array<any>>> {
   }
 }
 
-class ReconnectionState {
+export class ReconnectionState {
   retries: number;
 
   timeout: ReturnType<typeof setTimeout> | undefined;
@@ -101,7 +101,7 @@ export class BaseProvider<
   protected log(msg: string) {
     const parts = [this.constructor.name] as string[];
     if (this.socket?.id) {
-      parts.push(this.socket.id);
+      parts.push(`id: ${this.socket.id}`);
     }
     this.logger?.(`[${parts.join(' - ')}] ${msg}`);
   }
@@ -136,6 +136,11 @@ export class BaseProvider<
     return msg;
   }
 
+  // Must be overriden by subclasses. Should attach socket listeners that proxy to event emitter.
+  setupListeners(socket: Socket, rs: ReconnectionState) {
+    throw new Error('Method not implemented.');
+  }
+
   /*//////////////////////////////////////////////////////////////
                                 CONNECT
       //////////////////////////////////////////////////////////////*/
@@ -163,14 +168,14 @@ export class BaseProvider<
     // 2. Create new socket and setup listeners
     // ----------------------------------------------------------------
 
-    // We store a local reference to the socket created within the scope of this `connect` call.
-    // The reason is that this.socket can be reassigned to a new socket in subsequent calls to `connect`.
+    // We store a local reference to the socket created within the scope of this `connectScoped` call.
+    // The reason is that this.socket can be reassigned to a new socket in subsequent calls to `connectScoped`.
     // We want to reference the locally scoped socket within callbacks to avoid referencing the wrong socket.
     const socket = io(endpoint, {
       ...this.connectOpts,
       ...(auth ? { auth } : {}),
       transports: ['websocket'],
-      autoConnect: true,
+      autoConnect: true, // no need to manually call socket.connect()
       reconnection: false, // we set this to false as we manually handle reconnection behavior.
     });
     this.socket = socket;
@@ -237,20 +242,24 @@ export class BaseProvider<
       }
       reconnect();
     });
+
+    this.setupListeners(socket, rs);
   }
 
-  protected connectEntrypoint(
-    endpoint: string,
-    auth: TAuth
-  ): ReconnectionState {
+  protected connectEntrypoint({
+    endpoint,
+    auth,
+  }: {
+    endpoint: string;
+    auth: TAuth;
+  }) {
     // We store reconnection state in a separate instance of a utility class. The reason
     // we do this as opposed to storing this state on the instance is that sdk consumers
-    // might call this method multiple times. We want to ensure that each call to connect
+    // might call this method multiple times. We want to ensure that each call to connectEntrypoint
     // has it's own scoped state for reconnection attempts. Additionally, subclasses can
     // inject the most recent access token into the reconnection state object when an
     // AccessToken event is emitted. This enables session re-establishment.
     const rs = new ReconnectionState(this.retryDelayMsecs);
     this.connectScoped(endpoint, auth, rs);
-    return rs;
   }
 }

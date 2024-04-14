@@ -1,3 +1,4 @@
+import { Socket } from 'socket.io-client';
 import {
   MakerAuth,
   MakerEventsMap,
@@ -11,7 +12,7 @@ import {
   SocketOnCallback,
   WebsocketEvent,
 } from './events.types';
-import { BaseProvider } from './events.utils';
+import { BaseProvider, ReconnectionState } from './events.utils';
 
 export class MakerProvider extends BaseProvider<
   MakerEventsMap,
@@ -22,13 +23,8 @@ export class MakerProvider extends BaseProvider<
                               CONNECT
     //////////////////////////////////////////////////////////////*/
 
-  connect({ auth, endpoint }: { auth: MakerAuth; endpoint: string }) {
-    const rs = super.connectEntrypoint(endpoint, auth);
-    if (!this.socket) {
-      return;
-    }
-
-    this.socket.on(
+  setupListeners(socket: Socket, rs: ReconnectionState) {
+    socket.on(
       WebsocketEvent.AccessToken,
       (data: PayloadAccessToken, callback: SocketOnCallback) => {
         callback('ACK');
@@ -38,7 +34,7 @@ export class MakerProvider extends BaseProvider<
       }
     );
 
-    this.socket.on(
+    socket.on(
       WebsocketEvent.OrderCreated,
       (data: PayloadOrderCreated, callback: SocketOnCallback) => {
         callback('ACK');
@@ -47,7 +43,7 @@ export class MakerProvider extends BaseProvider<
       }
     );
 
-    this.socket.on(
+    socket.on(
       WebsocketEvent.OrderFulfilled,
       (data: PayloadOrderFulfilled, callback: SocketOnCallback) => {
         callback('ACK');
@@ -56,7 +52,7 @@ export class MakerProvider extends BaseProvider<
       }
     );
 
-    this.socket.on(
+    socket.on(
       WebsocketEvent.QuoteAccepted,
       (data: PayloadQuoteAccepted, callback: SocketOnCallback) => {
         callback('ACK');
@@ -65,7 +61,7 @@ export class MakerProvider extends BaseProvider<
       }
     );
 
-    this.socket.on(
+    socket.on(
       WebsocketEvent.RequestForQuoteBroadcast,
       (data: PayloadRequestForQuoteBroadcast) => {
         // This event is emitted to all market makers within a market room. Since this is emitted to a room,
@@ -77,7 +73,7 @@ export class MakerProvider extends BaseProvider<
       }
     );
 
-    this.socket.on('message', (data: PayloadMessage) => {
+    socket.on('message', (data: PayloadMessage) => {
       const msg = this.findMessage(data.id);
       if (!msg) return;
       if (Object.values(MakerMethod).includes(msg.method)) {
@@ -86,6 +82,10 @@ export class MakerProvider extends BaseProvider<
         this.log(`Found incoming message but method unknown: ${msg.method}`);
       }
     });
+  }
+
+  connect({ auth, endpoint }: { auth: MakerAuth; endpoint: string }) {
+    super.connectEntrypoint({ endpoint, auth });
   }
 
   /*//////////////////////////////////////////////////////////////

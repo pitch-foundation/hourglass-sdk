@@ -1,22 +1,14 @@
+import { Socket } from 'socket.io-client';
 import { DataEventsMap, DataMethod, PayloadMessage } from './events.types';
-import { BaseProvider } from './events.utils';
+import { BaseProvider, ReconnectionState } from './events.utils';
 
 export class DataProvider extends BaseProvider<
   DataEventsMap,
   DataMethod,
   null
 > {
-  /*//////////////////////////////////////////////////////////////
-                              CONNECT
-    //////////////////////////////////////////////////////////////*/
-
-  connect(endpoint: string) {
-    super.connectEntrypoint(endpoint, null);
-    if (!this.socket) {
-      return;
-    }
-
-    this.socket.on('message', (data: PayloadMessage) => {
+  setupListeners(socket: Socket, rs: ReconnectionState) {
+    socket.on('message', (data: PayloadMessage) => {
       const msg = this.findMessage(data.id);
       if (!msg) return;
       if (Object.values(DataMethod).includes(msg.method)) {
@@ -25,6 +17,14 @@ export class DataProvider extends BaseProvider<
         this.log(`Found incoming message but method unknown: ${msg.method}`);
       }
     });
+  }
+
+  /*//////////////////////////////////////////////////////////////
+                              CONNECT
+    //////////////////////////////////////////////////////////////*/
+
+  connect({ endpoint }: { endpoint: string }) {
+    super.connectEntrypoint({ endpoint, auth: null });
   }
 
   /*//////////////////////////////////////////////////////////////
