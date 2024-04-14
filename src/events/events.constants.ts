@@ -4,5 +4,5 @@ export const DEV_ENDPOINTS = {
   data: 'ws://localhost:3100/data',
 };
 
-export const MAX_RETRY_ATTEMPTS = 10;
-export const RETRY_DELAY = 200;
+export const MAX_RETRY_ATTEMPTS = 6;
+export const RETRY_DELAY = 1000;

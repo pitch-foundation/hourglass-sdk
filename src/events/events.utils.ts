@@ -42,6 +42,7 @@ class TypedEventEmitter<TEvents extends Record<string, Array<any>>> {
 
 class ReconnectionState {
   retries: number;
+
   timeout: ReturnType<typeof setTimeout> | undefined;
   accessToken?: string;
 
@@ -64,10 +65,9 @@ class ReconnectionState {
 
   setupReconnectTimeout(callback: (accessToken?: string) => void) {
     // Injects the most recent access token into the reconnect callback
-    this.timeout = setTimeout(
-      () => callback(this.accessToken),
-      Math.pow(2, this.retries++) * this.retryDelay
-    );
+    const delayMsecs = Math.pow(2, this.retries++) * this.retryDelay;
+    console.log(`Reconnecting in ${delayMsecs / 1000} secs`);
+    this.timeout = setTimeout(() => callback(this.accessToken), delayMsecs);
   }
 
   setAccessToken(token: string) {
@@ -89,22 +89,22 @@ export class BaseProvider<
   protected retryDelay: number;
   protected maxRetries: number;
 
-  constructor({
-    logger,
-    debug,
-    connectOpts,
-    retryDelay,
-    maxRetries,
-  }: ProviderConstructorArgs) {
+  constructor(args: ProviderConstructorArgs) {
     super();
+    const { logger, debug, connectOpts, retryDelay, maxRetries } = args;
     this.logger = debug ? logger ?? console.log : undefined;
     this.connectOpts = connectOpts ?? {};
     this.retryDelay = retryDelay ?? RETRY_DELAY;
     this.maxRetries = maxRetries ?? MAX_RETRY_ATTEMPTS;
+    this.log(`initialized | ${JSON.stringify(args)}`);
   }
 
   protected log(msg: string) {
-    this.logger?.(`[${this.constructor.name}] ${msg}`);
+    const parts = [this.constructor.name] as string[];
+    if (this.socket?.id) {
+      parts.push(this.socket.id);
+    }
+    this.logger?.(`[${parts.join(' - ')}] ${msg}`);
   }
 
   protected emitMessage(method: TMethod, params: unknown) {
@@ -112,7 +112,12 @@ export class BaseProvider<
       this.log('socket not connected. Cannot send message');
       return;
     }
-    const message = createMessage(method, params);
+    const message = {
+      jsonrpc: '2.0',
+      method: method,
+      params: params,
+      id: crypto.randomUUID(),
+    };
     this.globalMessages.push(message);
     this.log(`Emitting message: ${JSON.stringify(message)}`);
     this.socket.emit('message', message);
@@ -197,8 +202,8 @@ export class BaseProvider<
         // token (if one exists) into this callback when it is invoked. This enables
         // session re-establishment with the most recent access token.
         rs.setupReconnectTimeout((accessToken?: string) => {
+          this.log(`retry attempt: ${rs.retries}`);
           if (auth && accessToken) {
-            this.log('Reconnecting with new access token');
             auth.token = accessToken;
           }
           this.connectScoped(endpoint, auth, rs);
@@ -219,7 +224,7 @@ export class BaseProvider<
     });
 
     socket.on('disconnect', (reason, description) => {
-      this.log(`Disconnected: ${reason} - ${description}`);
+      this.log(`Disconnected: ${reason} - ${JSON.stringify(description)}`);
       this.emit('disconnect', reason, description);
 
       // If we called socket.disconnect() explicitly, we don't want to reconnect
@@ -227,10 +232,9 @@ export class BaseProvider<
         this.log(
           'Explicit disconnect on client side. Not trying to reconnect.'
         );
-        rs.clearReconnectTimeout();
+        rs.reset();
         return;
       }
-
       reconnect();
     });
   }
@@ -250,17 +254,3 @@ export class BaseProvider<
     return rs;
   }
 }
-
-export const createMessage = <M extends DataMethod | MakerMethod | TakerMethod>(
-  method: M,
-  params: any
-): JsonRpcMessage<M> => {
-  const uuid = crypto.randomUUID();
-  const message = {
-    jsonrpc: '2.0',
-    method: method,
-    params: params,
-    id: uuid,
-  };
-  return message;
-};
