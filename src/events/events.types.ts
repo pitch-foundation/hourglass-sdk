@@ -216,6 +216,11 @@ export type PayloadRequestForQuoteBroadcast = {
   quoteAmount: string | null;
 };
 
+export type QuoteAcceptedCallbackArgs = {
+  components: SeaportOrderComponents;
+  signature: string;
+};
+
 export type PayloadMessage = { id: string; result: any; error: any };
 
 // ----------------------------------- Payloads - JSON RPC Methods - Taker API -----------------------------------
@@ -273,6 +278,10 @@ export type EventsMapEntryArgs<T extends any> =
   | [data: T, error: undefined]
   | [data: undefined, error: object];
 
+export type EventsMapEntryArgsWithCallback<T extends any, C extends any> =
+  | [data: T, error: undefined, callback: (data: C) => void]
+  | [data: undefined, error: object];
+
 type SocketIoEventsMap = {
   connect: [];
   disconnect: [
@@ -298,7 +307,10 @@ export type MakerEventsMap = {
   [WebsocketEvent.OrderFulfilled]: EventsMapEntryArgs<PayloadOrderFulfilled>;
   [WebsocketEvent.OrderCreated]: EventsMapEntryArgs<PayloadOrderCreated>;
   [WebsocketEvent.RequestForQuoteBroadcast]: EventsMapEntryArgs<PayloadRequestForQuoteBroadcast>;
-  [WebsocketEvent.QuoteAccepted]: EventsMapEntryArgs<PayloadQuoteAccepted>;
+  [WebsocketEvent.QuoteAccepted]: EventsMapEntryArgsWithCallback<
+    PayloadQuoteAccepted,
+    QuoteAcceptedCallbackArgs
+  >;
   [WebsocketEvent.AccessToken]: EventsMapEntryArgs<PayloadAccessToken>;
 } & SocketIoEventsMap;
 

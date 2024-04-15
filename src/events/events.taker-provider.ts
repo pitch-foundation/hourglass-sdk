@@ -10,8 +10,8 @@ import {
   SocketOnCallback,
   TakerAuth,
   TakerEventsMap,
-  TakerMethod,
   UseCase,
+  TakerMethod,
   WebsocketEvent,
 } from './events.types';
 import { BaseProvider, ReconnectionState } from './events.utils';
@@ -25,7 +25,7 @@ export class TakerProvider extends BaseProvider<
                               CONNECT
     //////////////////////////////////////////////////////////////*/
 
-  setupListeners(socket: Socket, rs: ReconnectionState) {
+  protected setupListeners(socket: Socket, rs: ReconnectionState) {
     socket.on(
       WebsocketEvent.AccessToken,
       (data: PayloadAccessToken, callback: SocketOnCallback) => {
@@ -74,6 +74,15 @@ export class TakerProvider extends BaseProvider<
     });
   }
 
+  /**
+   * Connect to the websocket server.
+   *
+   * For resuming a connection, add the optional `token` to the `auth` object.
+   *
+   * Depending on the `source`, there are 2 types of connections: `api` and `protocol`.
+   * For `api`, the `auth` object must contain a `clientId` and `clientSecret`.
+   * For `protocol`, the `auth` object must contain just the `secret`.
+   */
   connect({ auth, endpoint }: { auth: TakerAuth; endpoint: string }) {
     super.connectEntrypoint({ endpoint, auth });
   }
@@ -82,6 +91,10 @@ export class TakerProvider extends BaseProvider<
                               ACTIONS
     //////////////////////////////////////////////////////////////*/
 
+  /**
+   * Request a quote from the server. Doesn't return the quote.
+   * Listen for the `TakerMethod.hg_requestQuote` event to get the quotes.
+   */
   requestQuote(
     data: {
       baseAssetAddress: string;
@@ -104,6 +117,10 @@ export class TakerProvider extends BaseProvider<
     this.emitMessage(TakerMethod.hg_requestQuote, data);
   }
 
+  /**
+   * Accept a quote from the server. Doesn't return the order.
+   * Listen for the `TakerMethod.hg_acceptQuote` event to get the confirmation.
+   */
   acceptQuote(data: {
     quoteId: number;
     components?: SeaportOrderComponents;

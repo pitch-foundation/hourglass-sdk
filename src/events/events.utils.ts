@@ -88,9 +88,10 @@ export class BaseProvider<
   private retryDelayMsecs: number;
   private maxRetries: number;
 
-  constructor(args: ProviderConstructorArgs) {
+  constructor(args?: ProviderConstructorArgs) {
     super();
-    const { logger, debug, connectOpts, retryDelayMsecs, maxRetries } = args;
+    const { logger, debug, connectOpts, retryDelayMsecs, maxRetries } =
+      args ?? {};
     this.logger = debug ? logger ?? console.log : undefined;
     this.connectOpts = connectOpts ?? {};
     this.retryDelayMsecs = retryDelayMsecs ?? RETRY_DELAY;
@@ -137,7 +138,7 @@ export class BaseProvider<
   }
 
   // Must be overriden by subclasses. Should attach socket listeners that proxy to event emitter.
-  setupListeners(socket: Socket, rs: ReconnectionState) {
+  protected setupListeners(socket: Socket, rs: ReconnectionState) {
     throw new Error('Method not implemented.');
   }
 

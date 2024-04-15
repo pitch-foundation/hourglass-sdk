@@ -8,6 +8,7 @@ import {
   PayloadOrderCreated,
   PayloadOrderFulfilled,
   PayloadQuoteAccepted,
+  QuoteAcceptedCallbackArgs,
   PayloadRequestForQuoteBroadcast,
   SocketOnCallback,
   WebsocketEvent,
@@ -23,7 +24,7 @@ export class MakerProvider extends BaseProvider<
                               CONNECT
     //////////////////////////////////////////////////////////////*/
 
-  setupListeners(socket: Socket, rs: ReconnectionState) {
+  protected setupListeners(socket: Socket, rs: ReconnectionState) {
     socket.on(
       WebsocketEvent.AccessToken,
       (data: PayloadAccessToken, callback: SocketOnCallback) => {
@@ -54,10 +55,12 @@ export class MakerProvider extends BaseProvider<
 
     socket.on(
       WebsocketEvent.QuoteAccepted,
-      (data: PayloadQuoteAccepted, callback: SocketOnCallback) => {
-        callback('ACK');
+      (
+        data: PayloadQuoteAccepted,
+        callback: (data: QuoteAcceptedCallbackArgs) => void
+      ) => {
         this.log(`Received quote accepted: ${JSON.stringify(data)}`);
-        this.emit(WebsocketEvent.QuoteAccepted, data, undefined);
+        this.emit(WebsocketEvent.QuoteAccepted, data, undefined, callback);
       }
     );
 
@@ -84,6 +87,10 @@ export class MakerProvider extends BaseProvider<
     });
   }
 
+  /**
+   * Connect to the websocket server. For resuming a connection, add the
+   * optional `token` to the `auth` object.
+   */
   connect({ auth, endpoint }: { auth: MakerAuth; endpoint: string }) {
     super.connectEntrypoint({ endpoint, auth });
   }
@@ -92,6 +99,10 @@ export class MakerProvider extends BaseProvider<
                               ACTIONS
     //////////////////////////////////////////////////////////////*/
 
+  /**
+   * Submit a quote to the server. Listen for the `MakerMethod.hg_submitQuote`
+   * event to get the confirmation.
+   */
   submitQuote(data: {
     baseAmount?: string;
     quoteAmount?: string;
@@ -107,11 +118,19 @@ export class MakerProvider extends BaseProvider<
     this.emitMessage(MakerMethod.hg_submitQuote, data);
   }
 
+  /**
+   * Subscribe to a market. Listen for the `MakerMethod.hg_subscribeToMarket`
+   * event to get the confirmation.
+   */
   subscribeToMarket(data: { marketId: number }) {
     this.log(`Subscribing to market: ${JSON.stringify(data)}`);
     this.emitMessage(MakerMethod.hg_subscribeToMarket, data);
   }
 
+  /**
+   * Unsubscribe from a market. Listen for the `MakerMethod.hg_unsubscribeFromMarket`
+   * event to get the confirmation.
+   */
   unsubscribeFromMarket(data: { marketId: number }) {
     this.log(`Unsubscribing from market: ${JSON.stringify(data)}`);
     this.emitMessage(MakerMethod.hg_unsubscribeFromMarket, data);

@@ -1,13 +1,13 @@
 import { Socket } from 'socket.io-client';
 import { DataEventsMap, DataMethod, PayloadMessage } from './events.types';
-import { BaseProvider, ReconnectionState } from './events.utils';
+import { BaseProvider } from './events.utils';
 
 export class DataProvider extends BaseProvider<
   DataEventsMap,
   DataMethod,
   null
 > {
-  setupListeners(socket: Socket, rs: ReconnectionState) {
+  protected setupListeners(socket: Socket) {
     socket.on('message', (data: PayloadMessage) => {
       const msg = this.findMessage(data.id);
       if (!msg) return;
@@ -23,6 +23,9 @@ export class DataProvider extends BaseProvider<
                               CONNECT
     //////////////////////////////////////////////////////////////*/
 
+  /**
+   * Connect to the websocket server.
+   */
   connect({ endpoint }: { endpoint: string }) {
     super.connectEntrypoint({ endpoint, auth: null });
   }
@@ -31,6 +34,10 @@ export class DataProvider extends BaseProvider<
                               ACTIONS
     //////////////////////////////////////////////////////////////*/
 
+  /**
+   * Request the list of markets from the server. Listen for the
+   * `DataMethod.hg_getMarkets` event to get the list of markets.
+   */
   requestMarkets() {
     this.log('Requesting markets');
     this.emitMessage(DataMethod.hg_getMarkets, {});

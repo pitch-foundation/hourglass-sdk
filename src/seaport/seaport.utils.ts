@@ -12,9 +12,7 @@ import { keccak256 } from 'ethers/lib/utils';
 import { SeaportV5__factory } from '../abi';
 import { OrderComponentsStruct } from '../abi/SeaportV5';
 
-// globalThis.Buffer = Buffer;
-
-export const STAKING_ADDRESSES = {
+export const HOURGLASS_SEAPORT_ADDRESSES = {
   seaportRollingZone: '0x67b14Fb1876901102f3fAA4dFB958e3C63b4AA1a',
   seaportConduit: '0x9352dA82F42c5bDDe9F0b2C19D635baE39142dD8',
   seaportConduitKey:
@@ -32,7 +30,8 @@ export const getSeaport = async (signer: JsonRpcSigner) => {
   const seaport = new Seaport(signer, {
     seaportVersion: '1.5',
     conduitKeyToConduit: {
-      [STAKING_ADDRESSES.seaportConduitKey]: STAKING_ADDRESSES.seaportConduit,
+      [HOURGLASS_SEAPORT_ADDRESSES.seaportConduitKey]:
+        HOURGLASS_SEAPORT_ADDRESSES.seaportConduit,
     },
   });
 
