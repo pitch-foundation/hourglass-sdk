@@ -4,7 +4,7 @@
 
 import { Contract, Signer, utils } from "ethers";
 import type { Provider } from "@ethersproject/providers";
-import type { SeaportV5, SeaportV5Interface } from "../SeaportV5";
+import type { SeaportV5, SeaportV5Interface } from "../SeaportV5.js";
 
 const _abi = [
   {

@@ -1,6 +1,6 @@
 import { Socket } from 'socket.io-client';
-import { DataEventsMap, DataMethod, PayloadMessage } from './events.types';
-import { BaseProvider } from './events.utils';
+import { DataEventsMap, DataMethod, PayloadMessage } from './events.types.js';
+import { BaseProvider } from './events.utils.js';
 
 export class DataProvider extends BaseProvider<
   DataEventsMap,

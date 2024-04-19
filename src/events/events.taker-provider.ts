@@ -1,5 +1,5 @@
 import { Socket } from 'socket.io-client';
-import { SeaportOrderComponents } from '../seaport/seaport.types';
+import { SeaportOrderComponents } from '../seaport/seaport.types.js';
 import {
   ExecutorAndQuoteAssetReceiver,
   PayloadAccessToken,
@@ -13,8 +13,8 @@ import {
   UseCase,
   TakerMethod,
   WebsocketEvent,
-} from './events.types';
-import { BaseProvider, ReconnectionState } from './events.utils';
+} from './events.types.js';
+import { BaseProvider, ReconnectionState } from './events.utils.js';
 
 export class TakerProvider extends BaseProvider<
   TakerEventsMap,

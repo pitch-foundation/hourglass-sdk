@@ -12,8 +12,8 @@ import {
   PayloadRequestForQuoteBroadcast,
   SocketOnCallback,
   WebsocketEvent,
-} from './events.types';
-import { BaseProvider, ReconnectionState } from './events.utils';
+} from './events.types.js';
+import { BaseProvider, ReconnectionState } from './events.utils.js';
 
 export class MakerProvider extends BaseProvider<
   MakerEventsMap,

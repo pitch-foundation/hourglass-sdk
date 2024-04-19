@@ -1,6 +1,6 @@
 import EventEmitter from 'events';
 import { Socket, io } from 'socket.io-client';
-import { MAX_RETRY_ATTEMPTS, RETRY_DELAY } from './events.constants';
+import { MAX_RETRY_ATTEMPTS, RETRY_DELAY } from './events.constants.js';
 import {
   DataEventsMap,
   DataMethod,
@@ -13,7 +13,7 @@ import {
   TakerEventsMap,
   TakerMethod,
   WebsocketConnectOptions,
-} from './events.types';
+} from './events.types.js';
 
 class TypedEventEmitter<TEvents extends Record<string, Array<any>>> {
   _emitter = new EventEmitter();

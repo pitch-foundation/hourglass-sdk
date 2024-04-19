@@ -2,7 +2,7 @@ import { ManagerOptions, Socket, SocketOptions } from 'socket.io-client';
 import {
   SeaportOrderComponents,
   SeaportOrderComponentsEntity,
-} from '../seaport/seaport.types';
+} from '../seaport/seaport.types.js';
 
 // ----------------------------------- Enums -----------------------------------
 
