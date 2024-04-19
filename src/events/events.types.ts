@@ -1,12 +1,8 @@
-import { ManagerOptions, Socket } from 'socket.io-client';
+import { ManagerOptions, Socket, SocketOptions } from 'socket.io-client';
 import {
   SeaportOrderComponents,
   SeaportOrderComponentsEntity,
 } from '../seaport/seaport.types';
-import {
-  DisconnectDescription,
-  SocketOptions,
-} from 'socket.io-client/build/esm/socket';
 
 // ----------------------------------- Enums -----------------------------------
 
@@ -284,10 +280,7 @@ export type EventsMapEntryArgsWithCallback<T extends any, C extends any> =
 
 type SocketIoEventsMap = {
   connect: [];
-  disconnect: [
-    reason: Socket.DisconnectReason,
-    description: DisconnectDescription | undefined
-  ];
+  disconnect: [reason: Socket.DisconnectReason, description: any | undefined];
   connect_error: [error: Error];
 };
 
