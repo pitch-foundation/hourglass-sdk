@@ -15,7 +15,7 @@ import {
   WebsocketConnectOptions,
 } from './events.types.js';
 
-class TypedEventEmitter<TEvents extends Record<string, Array<any>>> {
+class TypedEventEmitter<TEvents extends Record<string, Array<unknown>>> {
   _emitter = new EventEmitter();
 
   emit<TEventName extends keyof TEvents & string>(
@@ -138,6 +138,7 @@ export class BaseProvider<
   }
 
   // Must be overriden by subclasses. Should attach socket listeners that proxy to event emitter.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   protected setupListeners(socket: Socket, rs: ReconnectionState) {
     throw new Error('Method not implemented.');
   }

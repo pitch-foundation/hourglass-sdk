@@ -13,6 +13,8 @@ import {
   UseCase,
   TakerMethod,
   WebsocketEvent,
+  PayloadHgRequestQuote,
+  PayloadHgAcceptQuote,
 } from './events.types.js';
 import { BaseProvider, ReconnectionState } from './events.utils.js';
 
@@ -66,6 +68,28 @@ export class TakerProvider extends BaseProvider<
     socket.on('message', (data: PayloadMessage) => {
       const msg = this.findMessage(data.id);
       if (!msg) return;
+      switch (msg.method) {
+        case TakerMethod.hg_requestQuote:
+          this.emit(
+            TakerMethod.hg_requestQuote,
+            data.result as PayloadHgRequestQuote | undefined,
+            data.error
+          );
+          break;
+        case TakerMethod.hg_acceptQuote:
+          this.emit(
+            TakerMethod.hg_acceptQuote,
+            data.result as PayloadHgAcceptQuote | undefined,
+            data.error
+          );
+          break;
+        default: {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const _exhaustiveCheck: never = msg.method;
+          this.log(`Found incoming message but method unknown: ${msg.method}`);
+        }
+      }
+
       if (Object.values(TakerMethod).includes(msg.method)) {
         this.emit(msg.method, data.result, data.error);
       } else {
@@ -75,13 +99,21 @@ export class TakerProvider extends BaseProvider<
   }
 
   /**
-   * Connect to the websocket server.
+   * Establishes a connection to the websocket server.
    *
-   * For resuming a connection, add the optional `token` to the `auth` object.
+   * @param {Object} params - Connection options.
+   * @param {TakerAuth} params.auth - The authentication object.
+   * @param {string} [params.auth.accessToken] - The access token. If provided, allows the user to skip
+   *    authentication and resume interactions from previous sessions. If not provided, a new access token
+   *    will be issued to the user upon a successful authentication.
+   * @param {string} params.auth.clientId - The client ID for a taker API user.
+   * @param {string} params.auth.clientSecret - The client secret for a taker API user.
+   * @param {string} params.endpoint - The endpoint to connect to.
    *
-   * Depending on the `source`, there are 2 types of connections: `api` and `protocol`.
-   * For `api`, the `auth` object must contain a `clientId` and `clientSecret`.
-   * For `protocol`, the `auth` object must contain just the `secret`.
+   * @example
+   * ```typescript
+   * connect({ endpoint: 'ws://localhost:3100/taker' });
+   * ```
    */
   connect({ auth, endpoint }: { auth: TakerAuth; endpoint: string }) {
     super.connectEntrypoint({ endpoint, auth });
@@ -94,6 +126,24 @@ export class TakerProvider extends BaseProvider<
   /**
    * Request a quote from the server. Doesn't return the quote.
    * Listen for the `TakerMethod.hg_requestQuote` event to get the quotes.
+   *
+   * @param {Object} data - The quote request data.
+   * @param {string} data.baseAssetAddress - The base asset address.
+   * @param {string} data.quoteAssetAddress - The quote asset address.
+   * @param {number} data.baseAssetChainId - The base asset chain ID. Currently only ethereum (chainId: 1) is supported.
+   * @param {number} data.quoteAssetChainId - The quote asset chain ID. Currently only ethereum (chainId: 1) is supported.
+   * @param {string} [data.baseAmount] - The base amount of the quote. If specified, quoteAmount must not be specified.
+   * @param {string} [data.quoteAmount] - The quote amount of the quote. If specified, baseAmount must not be specified.
+   * @param {UseCase} [data.useCase] - The use case. Defaults to DEFAULT
+   * @param {Record<string, any>} [data.useCaseMetadata] - The use case metadata.
+   *
+   * @example
+   * ```typescript
+   *  takerProvider.requestQuote();
+   *  takerProvider.on(TakerMethod.hg_requestQuote, (data: PayloadBestQuote, err) => {
+   *    // Check for error and handle response if successful
+   *  });
+   * ```
    */
   requestQuote(
     data: {
@@ -104,7 +154,7 @@ export class TakerProvider extends BaseProvider<
       baseAmount?: string;
       quoteAmount?: string;
       useCase?: UseCase;
-      useCaseMetadata?: Record<string, any>;
+      useCaseMetadata?: Record<string, unknown>;
     } & ExecutorAndQuoteAssetReceiver
   ) {
     if (
@@ -120,6 +170,19 @@ export class TakerProvider extends BaseProvider<
   /**
    * Accept a quote from the server. Doesn't return the order.
    * Listen for the `TakerMethod.hg_acceptQuote` event to get the confirmation.
+   *
+   * @param {Object} data - The quote acceptance data.
+   * @param {number} data.quoteId - The quote ID.
+   * @param {SeaportOrderComponents} [data.components] - The seaport order components.
+   * @param {string} [data.signature] - The signature.
+   *
+   * @example
+   * ```typescript
+   *  takerProvider.acceptQuote();
+   *  takerProvider.on(TakerMethod.hg_acceptQuote, (data: PayloadOrderCreated, err) => {
+   *    // Check for error and handle response if successful
+   *  });
+   * ```
    */
   acceptQuote(data: {
     quoteId: number;

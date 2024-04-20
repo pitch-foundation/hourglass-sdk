@@ -136,7 +136,7 @@ export type Market = {
 export type JsonRpcMessage<M extends DataMethod | MakerMethod | TakerMethod> = {
   jsonrpc: string;
   method: M;
-  params: any;
+  params: unknown;
   id: string;
 };
 
@@ -217,6 +217,7 @@ export type QuoteAcceptedCallbackArgs = {
   signature: string;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type PayloadMessage = { id: string; result: any; error: any };
 
 // ----------------------------------- Payloads - JSON RPC Methods - Taker API -----------------------------------
@@ -270,17 +271,20 @@ export type PayloadHgGetMarkets = {
 
 // ----------------------------------- Event Maps -----------------------------------
 
-export type EventsMapEntryArgs<T extends any> =
+export type EventsMapEntryArgs<T> =
   | [data: T, error: undefined]
   | [data: undefined, error: object];
 
-export type EventsMapEntryArgsWithCallback<T extends any, C extends any> =
+export type EventsMapEntryArgsWithCallback<T, C> =
   | [data: T, error: undefined, callback: (data: C) => void]
   | [data: undefined, error: object];
 
 type SocketIoEventsMap = {
   connect: [];
-  disconnect: [reason: Socket.DisconnectReason, description: any | undefined];
+  disconnect: [
+    reason: Socket.DisconnectReason,
+    description: unknown | undefined
+  ];
   connect_error: [error: Error];
 };
 

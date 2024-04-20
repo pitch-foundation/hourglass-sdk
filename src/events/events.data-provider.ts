@@ -16,18 +16,19 @@ export class DataProvider extends BaseProvider<
     socket.on('message', (data: PayloadMessage) => {
       const msg = this.findMessage(data.id);
       if (!msg) return;
-
       switch (msg.method) {
         case DataMethod.hg_getMarkets:
           this.emit(
             DataMethod.hg_getMarkets,
-            data.result as PayloadHgGetMarkets | undefined,
+            data.result as PayloadHgGetMarkets,
             data.error
           );
           break;
-        default:
+        default: {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const _exhaustiveCheck: never = msg.method;
           this.log(`Found incoming message but method unknown: ${msg.method}`);
+        }
       }
     });
   }
@@ -43,7 +44,9 @@ export class DataProvider extends BaseProvider<
    * @param {string} params.endpoint - The endpoint to connect to.
    *
    * @example
+   * ```typescript
    * connect({ endpoint: 'ws://localhost:3100/taker' });
+   * ```
    */
   connect({ endpoint }: { endpoint: string }) {
     super.connectEntrypoint({ endpoint, auth: null });
@@ -62,16 +65,13 @@ export class DataProvider extends BaseProvider<
    *
    * @example
    * ```typescript
-   * dataProvider.requestMarkets();
-   * dataProvider.on(DataMethod.hg_getMarkets, (data: PayloadHgGetMarkets, err) => {
-   *  if (error) {
-   *    console.error(err);
-   *  } else {
-   *    console.log(data);
-   *  }
+   *  dataProvider.getMarkets();
+   *  dataProvider.on(DataMethod.hg_getMarkets, (data: PayloadHgGetMarkets, err) => {
+   *    // Check for error and handle response if successful
+   *  });
    * ```
    */
-  requestMarkets() {
+  getMarkets() {
     this.log('Requesting markets');
     this.emitMessage(DataMethod.hg_getMarkets, {});
   }

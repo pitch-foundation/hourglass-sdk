@@ -16,6 +16,7 @@
     "build": "tsc",
     "clean": "rm -rf out",
     "prepare": "npm run build",
+    "lint": "eslint ./src -c .eslintrc.js",
     "typecheck": "tsc --noEmit",
     "gen:abi": "tsx scripts/generate-abi/run.mts"
   },

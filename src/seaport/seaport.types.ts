@@ -1,7 +1,6 @@
 export type SeaportOfferItemEntityItemType =
   (typeof SeaportOfferItemEntityItemType)[keyof typeof SeaportOfferItemEntityItemType];
 
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const SeaportOfferItemEntityItemType = {
   NUMBER_0: 0,
   NUMBER_1: 1,
@@ -22,7 +21,6 @@ export type SeaportOfferItemEntity = {
 export type SeaportOrderComponentsEntityOrderType =
   (typeof SeaportOrderComponentsEntityOrderType)[keyof typeof SeaportOrderComponentsEntityOrderType];
 
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const SeaportOrderComponentsEntityOrderType = {
   NUMBER_0: 0,
   NUMBER_1: 1,
@@ -33,7 +31,6 @@ export const SeaportOrderComponentsEntityOrderType = {
 export type SeaportConsiderationItemEntityItemType =
   (typeof SeaportConsiderationItemEntityItemType)[keyof typeof SeaportConsiderationItemEntityItemType];
 
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const SeaportConsiderationItemEntityItemType = {
   NUMBER_0: 0,
   NUMBER_1: 1,

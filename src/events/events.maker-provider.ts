@@ -12,6 +12,8 @@ import {
   PayloadRequestForQuoteBroadcast,
   SocketOnCallback,
   WebsocketEvent,
+  PayloadHgSubscribeToMarket,
+  PayloadHgSubmitQuote,
 } from './events.types.js';
 import { BaseProvider, ReconnectionState } from './events.utils.js';
 
@@ -79,17 +81,58 @@ export class MakerProvider extends BaseProvider<
     socket.on('message', (data: PayloadMessage) => {
       const msg = this.findMessage(data.id);
       if (!msg) return;
-      if (Object.values(MakerMethod).includes(msg.method)) {
-        this.emit(msg.method, data.result, data.error);
-      } else {
-        this.log(`Found incoming message but method unknown: ${msg.method}`);
+      switch (msg.method) {
+        case MakerMethod.hg_subscribeToMarket:
+          this.emit(
+            msg.method,
+            data.result as PayloadHgSubscribeToMarket | undefined,
+            data.error
+          );
+          break;
+        case MakerMethod.hg_unsubscribeFromMarket:
+          this.emit(
+            msg.method,
+            data.result as PayloadHgSubscribeToMarket | undefined,
+            data.error
+          );
+          break;
+        case MakerMethod.hg_submitQuote:
+          this.emit(
+            msg.method,
+            data.result as PayloadHgSubmitQuote | undefined,
+            data.error
+          );
+          break;
+        default: {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const _exhaustiveCheck: never = msg.method;
+          this.log(`Found incoming message but method unknown: ${msg.method}`);
+        }
       }
     });
   }
 
   /**
-   * Connect to the websocket server. For resuming a connection, add the
-   * optional `token` to the `auth` object.
+   * Establishes a connection to the websocket server.
+   *
+   * @param {Object} params - Connection options.
+   * @param {MakerAuth} params.auth - The authentication object.
+   * @param {string} [params.auth.accessToken] - The access token. If provided, allows the user to skip
+   *    authentication and resume interactions from previous sessions. If not provided, a new access token
+   *    will be issued to the user upon a successful authentication.
+   * @param {boolean} [params.allowForceDisconnect] - Allow the provider to force disconnect the socket.
+   *    The system enforces a constraint that only a single connection can exist for a given `accessToken`.
+   *    Assuming there is an existing connection with an access token
+   *    - If flag is true -> existing socket disconnected and new socket established with the same access token.
+   *    - If flag is false -> existing socket remains connected and connection error is thrown.
+   * @param {string} params.auth.clientId - The client ID for a maker API user.
+   * @param {string} params.auth.clientSecret - The client secret for a maker API user.
+   * @param {string} params.endpoint - The endpoint to connect to.
+   *
+   * @example
+   * ```typescript
+   * connect({ endpoint: 'ws://localhost:3100/maker' });
+   * ```
    */
   connect({ auth, endpoint }: { auth: MakerAuth; endpoint: string }) {
     super.connectEntrypoint({ endpoint, auth });
@@ -100,8 +143,28 @@ export class MakerProvider extends BaseProvider<
     //////////////////////////////////////////////////////////////*/
 
   /**
-   * Submit a quote to the server. Listen for the `MakerMethod.hg_submitQuote`
-   * event to get the confirmation.
+   * Submit a quote for an RFQ.
+   *
+   * This method triggers the emission of a 'message' event to the server.
+   * The listener for the `DataMethod.hg_submitQuote` will receive the response.
+   * - If successful, the type of the response object will be `PayloadHgGetMarkets`.
+   *
+   * An RFQ can either have the base amount or quote amount specified. When submitting a quote for an RFQ,
+   * the market maker must specify the opposite asset (i.e. if RFQ specifies base amount, the market maker must submit
+   * the quote amount with the quote and vice versa).
+   *
+   * @param {Object} data - The quote data.
+   * @param {string} [data.baseAmount] - The base amount of the quote. If specified, quoteAmount must not be specified.
+   * @param {string} [data.quoteAmount] - The quote amount of the quote. If specified, baseAmount must not be specified.
+   * @param {number} data.rfqId - The RFQ ID.
+   *
+   * @example
+   * ```typescript
+   *  makerProvider.submitQuote();
+   *  makerProvider.on(MakerMethod.hg_submitQuote, (data: PayloadHgSubmitQuote, err) => {
+   *    // Check for error and handle response if successful
+   *  });
+   * ```
    */
   submitQuote(data: {
     baseAmount?: string;
@@ -119,8 +182,21 @@ export class MakerProvider extends BaseProvider<
   }
 
   /**
-   * Subscribe to a market. Listen for the `MakerMethod.hg_subscribeToMarket`
-   * event to get the confirmation.
+   * Subscribe to a market.
+   *
+   * This method triggers the emission of a 'message' event to the server.
+   * The listener for the `MakerMethod.hg_subscribeToMarket` will receive the confirmation.
+   *
+   * @param {Object} data - The subscription data.
+   * @param {number} data.marketId - The ID of the market to subscribe to.
+   *
+   * @example
+   * ```typescript
+   *  makerProvider.subscribeToMarket({ marketId: 1 });
+   *  makerProvider.on(MakerMethod.hg_subscribeToMarket, (data, err) => {
+   *    // Check for error and handle response if successful
+   *  });
+   * ```
    */
   subscribeToMarket(data: { marketId: number }) {
     this.log(`Subscribing to market: ${JSON.stringify(data)}`);
@@ -128,8 +204,21 @@ export class MakerProvider extends BaseProvider<
   }
 
   /**
-   * Unsubscribe from a market. Listen for the `MakerMethod.hg_unsubscribeFromMarket`
-   * event to get the confirmation.
+   * Unsubscribe from a market.
+   *
+   * This method triggers the emission of a 'message' event to the server.
+   * The listener for the `MakerMethod.hg_unsubscribeFromMarket` will receive the confirmation.
+   *
+   * @param {Object} data - The unsubscription data.
+   * @param {number} data.marketId - The ID of the market to unsubscribe from.
+   *
+   * @example
+   * ```typescript
+   *  makerProvider.unsubscribeFromMarket({ marketId: 1 });
+   *  makerProvider.on(MakerMethod.hg_unsubscribeFromMarket, (data, err) => {
+   *    // Check for error and handle response if successful
+   *  });
+   * ```
    */
   unsubscribeFromMarket(data: { marketId: number }) {
     this.log(`Unsubscribing from market: ${JSON.stringify(data)}`);
