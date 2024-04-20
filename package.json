@@ -16,7 +16,7 @@
     "build": "tsc",
     "clean": "rm -rf out",
     "prepare": "npm run build",
-    "lint": "eslint ./src -c .eslintrc.js",
+    "docs": "typedoc src/** --plugin typedoc-material-theme --themeColor '#cb9820'",
     "typecheck": "tsc --noEmit",
     "gen:abi": "tsx scripts/generate-abi/run.mts"
   },
@@ -45,6 +45,7 @@
     "tsx": "^3.12.6",
     "typechain": "^8.3.1",
     "typedoc": "^0.25.13",
+    "typedoc-material-theme": "^1.0.2",
     "typescript": "^5.2.2"
   }
 }

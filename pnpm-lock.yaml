@@ -73,6 +73,9 @@ devDependencies:
   typedoc:
     specifier: ^0.25.13
     version: 0.25.13(typescript@5.4.2)
+  typedoc-material-theme:
+    specifier: ^1.0.2
+    version: 1.0.2(typedoc@0.25.13)
   typescript:
     specifier: ^5.2.2
     version: 5.4.2
@@ -2448,6 +2451,10 @@ packages:
     dependencies:
       '@lit-labs/ssr-dom-shim': 1.2.0
     dev: false
+
+  /@material/material-color-utilities@0.2.7:
+    resolution: {integrity: sha512-0FCeqG6WvK4/Cc06F/xXMd/pv4FeisI0c1tUpBbfhA2n9Y8eZEv4Karjbmf2ZqQCPUWMrGp8A571tCjizxoTiQ==}
+    dev: true
 
   /@metamask/eth-json-rpc-provider@1.0.1:
     resolution: {integrity: sha512-whiUMPlAOrVGmX8aKYVPvlKyG4CpQXiNNyt74vE1xb5sPvmx5oA7B/kOi/JdBvhGQq97U1/AVdXEdk2zkP8qyA==}
@@ -8321,6 +8328,16 @@ packages:
       typescript: 5.4.2
     transitivePeerDependencies:
       - supports-color
+    dev: true
+
+  /typedoc-material-theme@1.0.2(typedoc@0.25.13):
+    resolution: {integrity: sha512-/nH/twYeHrnz5sZaaXzYJ85EOgKqnbl1ivzBKmuEAga1dBsARttwQUTPKAT7XrCPD+rRcoqxuCOdXZ6EGiqRQA==}
+    engines: {node: '>=18.0.0', npm: '>=8.6.0'}
+    peerDependencies:
+      typedoc: ^0.25.3
+    dependencies:
+      '@material/material-color-utilities': 0.2.7
+      typedoc: 0.25.13(typescript@5.4.2)
     dev: true
 
   /typedoc@0.25.13(typescript@5.4.2):
