@@ -2,12 +2,6 @@
 
 The Hourglass SDK provides a set of tools and utilities for interacting with the Hourglass RFQ protocol and Seaport marketplace.
 
-## Installation
-
-```bash
-npm install @hourglass/sdk
-```
-
 ### Installation Through Github (using npm)
 
 ```bash
