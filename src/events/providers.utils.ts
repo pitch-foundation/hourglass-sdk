@@ -3,7 +3,7 @@ import { Socket, io } from 'socket.io-client';
 import {
   DEFAULT_MAX_RETRIES,
   DEFAULT_RETRY_DELAY_MSECS,
-} from './providers.constants.js';
+} from './events.constants.js';
 import {
   DataEventsMap,
   DataMethod,

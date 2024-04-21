@@ -6,7 +6,7 @@ import {
 import {
   DEFAULT_MAX_RETRIES,
   DEFAULT_RETRY_DELAY_MSECS,
-} from './providers.constants.js';
+} from './events.constants.js';
 
 // ----------------------------------- Enums -----------------------------------
 
