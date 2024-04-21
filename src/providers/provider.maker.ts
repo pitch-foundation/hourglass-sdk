@@ -20,12 +20,12 @@ import { BaseProvider, ReconnectionState } from './providers.utils.js';
 
 /**
  * @property {AuthMakerApiUser} auth - The authentication object.
- * @property {string} endpoint - The endpoint to connect to.
+ * @property {string} serverUrl - The url of the server to connect to.
  * @interface
  */
 export interface MakerConnectArgs {
   auth: AuthMakerApiUser;
-  endpoint: string;
+  serverUrl: string;
 }
 
 export class MakerProvider extends BaseProvider<
@@ -124,13 +124,15 @@ export class MakerProvider extends BaseProvider<
   }
 
   /**
-   * Establishes a connection to the websocket server for namespace /maker
+   * Establishes a connection to the websocket server for the `/maker` namespace.
    *
    * @param {MakerConnectArgs} params - Connection options.
    *
    * @example
    * ```typescript
-   * makerProvider.connect({ endpoint: 'ws://localhost:3100/maker' });
+   * import { SERVER_URL_STAGING } from '@hourglass/sdk';
+   *
+   * makerProvider.connect({ serverUrl: SERVER_URL_STAGING });
    * makerProvider.on('connect', () => {
    *  console.log("Successfully connected to the server");
    * })
@@ -149,8 +151,11 @@ export class MakerProvider extends BaseProvider<
    * ```
    * @category Connect
    */
-  connect({ auth, endpoint }: MakerConnectArgs) {
-    super.connectEntrypoint({ endpoint, auth });
+  connect({ auth, serverUrl }: MakerConnectArgs) {
+    super.connectEntrypoint({
+      endpoint: new URL('maker', serverUrl).toString(),
+      auth,
+    });
   }
 
   /*//////////////////////////////////////////////////////////////

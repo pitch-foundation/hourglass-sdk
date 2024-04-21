@@ -1,6 +1,9 @@
 import EventEmitter from 'events';
 import { Socket, io } from 'socket.io-client';
-import { MAX_RETRY_ATTEMPTS, RETRY_DELAY } from './providers.constants.js';
+import {
+  MAX_RETRY_ATTEMPTS,
+  RETRY_DELAY_MSECS,
+} from './providers.constants.js';
 import {
   DataEventsMap,
   DataMethod,
@@ -15,7 +18,7 @@ import {
   WebsocketConnectOptions,
 } from './providers.types.js';
 
-class TypedEventEmitter<TEvents extends Record<string, Array<unknown>>> {
+export class TypedEventEmitter<TEvents extends Record<string, Array<unknown>>> {
   protected _emitter = new EventEmitter();
 
   protected emit<TEventName extends keyof TEvents & string>(
@@ -89,6 +92,8 @@ export class ReconnectionState {
  * @template TEvents - The event map for the provider.
  * @template TMethod - The method enum for the provider.
  * @template TAuth - The auth type for the provider.
+ *
+ * @
  */
 export class BaseProvider<
   TEvents extends DataEventsMap | MakerEventsMap | TakerEventsMap,
@@ -113,7 +118,7 @@ export class BaseProvider<
       args ?? {};
     this.logger = debug ? logger ?? console.log : undefined;
     this.connectOpts = connectOpts ?? {};
-    this.retryDelayMsecs = retryDelayMsecs ?? RETRY_DELAY;
+    this.retryDelayMsecs = retryDelayMsecs ?? RETRY_DELAY_MSECS;
     this.maxRetries = maxRetries ?? MAX_RETRY_ATTEMPTS;
     this.log(`initialized | ${JSON.stringify(args)}`);
   }

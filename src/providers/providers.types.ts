@@ -3,6 +3,10 @@ import {
   SeaportOrderComponents,
   SeaportOrderComponentsEntity,
 } from '../seaport/seaport.types.js';
+import {
+  MAX_RETRY_ATTEMPTS,
+  RETRY_DELAY_MSECS,
+} from './providers.constants.js';
 
 // ----------------------------------- Enums -----------------------------------
 
@@ -380,18 +384,19 @@ export type SocketOnCallback = (value: string) => void;
 
 /**
  * Constructor arguments to the base provider class.
+ * @property {boolean} [debug] - Flag to enable / disable logging.
  * @property {Function} [logger] - A function that logs messages.
- *  - If not provided and {debug} is true, logs are printed to the console.
+ *  - If not provided and debug is true, logs are printed to the console.
+ *  - If provided and debug is true, we use custom logging function provided.
  *  - If not provided and debug is false, logs are suppressed.
- * @property {boolean} [debug] - If true, logs are printed to the console. If false, logs are suppressed.
- * @property {WebsocketConnectOptions} [connectOpts] - Options to pass to the socket.io client.
- * @property {number} [retryDelayMsecs] - The delay between reconnection attempts in milliseconds.
- * @property {number} [maxRetries] - The maximum number of reconnection attempts.
+ * @property {WebsocketConnectOptions} [connectOpts] - Options that are passed through to the internal call to socket.io's `connect` method.
+ * @property {number} [retryDelayMsecs] - The delay between reconnection attempts in milliseconds. Defaults to {@link RETRY_DELAY_MSECS}.
+ * @property {number} [maxRetries] - The maximum number of reconnection attempts. Defaults to {@link MAX_RETRY_ATTEMPTS}.
  * @interface
  */
 export type ProviderConstructorArgs = {
-  logger?: (message: string) => void;
   debug?: boolean;
+  logger?: (message: string) => void;
   connectOpts?: WebsocketConnectOptions;
   maxRetries?: number;
   retryDelayMsecs?: number;

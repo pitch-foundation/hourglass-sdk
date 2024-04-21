@@ -7,6 +7,20 @@ import {
 } from './providers.types.js';
 import { BaseProvider } from './providers.utils.js';
 
+/**
+ * The `DataProvider` facilitates interactions with the Hourglass RFQ system `/data` namespace.
+ *
+ * The `/data` namespaces enables clients to query information about the Hourglass RFQ system.
+ * Namely, it allows clients to query the list of supported markets and their respective details.
+ *
+ * This class extends an event emitter and proxies events from the underlying websocket to
+ * itself so that SDK consumers can listen for events without managing the websocket.
+ *
+ * @example
+ * ```typescript
+ * const dataProvider = new DataProvider();
+ * ```
+ */
 export class DataProvider extends BaseProvider<
   DataEventsMap,
   DataMethod,
@@ -38,14 +52,16 @@ export class DataProvider extends BaseProvider<
     //////////////////////////////////////////////////////////////*/
 
   /**
-   * Establishes a connection to the websocket server for namespace /data
+   * Establishes a connection to the websocket server for the `/data` namespace.
    *
    * @param {Object} params - Connection options.
-   * @param {string} params.endpoint - The endpoint to connect to.
+   * @param {string} params.serverUrl - The endpoint to connect to.
    *
    * @example
    * ```typescript
-   * dataProvider.connect({ endpoint: 'ws://localhost:3100/taker' });
+   * import { SERVER_URL_STAGING } from '@hourglass/sdk';
+   *
+   * dataProvider.connect({ serverUrl: SERVER_URL_STAGING });
    * dataProvider.on('connect', () => {
    *  console.log("Successfully connected to the server");
    * })
@@ -58,8 +74,11 @@ export class DataProvider extends BaseProvider<
    * ```
    * @category Connect
    */
-  connect({ endpoint }: { endpoint: string }) {
-    super.connectEntrypoint({ endpoint, auth: null });
+  connect({ serverUrl }: { serverUrl: string }) {
+    super.connectEntrypoint({
+      endpoint: new URL('data', serverUrl).toString(),
+      auth: null,
+    });
   }
 
   /*//////////////////////////////////////////////////////////////
@@ -70,8 +89,8 @@ export class DataProvider extends BaseProvider<
    * Query the list of supported markets.
    *
    * - This method triggers the emission of a 'message' event to the server.
-   * - The listener for the {@link DataMethod.hg_getMarkets} will receive the response.
-   * - If successful, the type of the response object will be `{@link PayloadHgGetMarkets}`.
+   * - The listener for event {@link DataMethod.hg_getMarkets} will receive the response.
+   * - If successful, the type of the response object will be {@link PayloadHgGetMarkets}.
    *
    * @example
    * ```typescript

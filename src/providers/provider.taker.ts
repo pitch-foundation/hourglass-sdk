@@ -20,12 +20,12 @@ import { BaseProvider, ReconnectionState } from './providers.utils.js';
 
 /**
  * @property {AuthTakerApiUser} auth - The authentication object.
- * @property {string} endpoint - The endpoint to connect to.
+ * @property {string} serverUrl - The url of the server to connect to.
  * @interface
  */
 export interface TakerConnectArgs {
   auth: AuthTakerApiUser;
-  endpoint: string;
+  serverUrl: string;
 }
 
 export class TakerProvider extends BaseProvider<
@@ -115,7 +115,9 @@ export class TakerProvider extends BaseProvider<
    *
    * @example
    * ```typescript
-   * takerProvider.connect({ endpoint: 'ws://localhost:3100/taker' });
+   * import { SERVER_URL_STAGING } from '@hourglass/sdk';
+   *
+   * takerProvider.connect({ serverUrl: SERVER_URL_STAGING });
    * takerProvider.on('connect', () => {
    *  console.log("Successfully connected to the server");
    * })
@@ -136,8 +138,11 @@ export class TakerProvider extends BaseProvider<
    * ```
    * @category Connect
    */
-  connect({ auth, endpoint }: TakerConnectArgs) {
-    super.connectEntrypoint({ endpoint, auth });
+  connect({ auth, serverUrl }: TakerConnectArgs) {
+    super.connectEntrypoint({
+      endpoint: new URL('taker', serverUrl).toString(),
+      auth,
+    });
   }
 
   /*//////////////////////////////////////////////////////////////
