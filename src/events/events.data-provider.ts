@@ -44,7 +44,7 @@ export class DataProvider extends BaseProvider<
         case DataMethod.hg_getMarkets:
           this.emit(
             DataMethod.hg_getMarkets,
-            data.result as PayloadHgGetMarkets,
+            data.result as PayloadHgGetMarkets | undefined,
             data.error
           );
           break;
