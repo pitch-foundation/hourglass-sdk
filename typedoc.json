@@ -1,5 +1,5 @@
 {
-  "entryPoints": ["src/chain", "src/providers", "src/seaport"],
+  "entryPoints": ["src/chain", "src/events", "src/seaport"],
   "entryPointStrategy": "expand",
   "plugin": "typedoc-material-theme",
   "excludePrivate": true,
