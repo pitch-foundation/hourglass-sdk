@@ -7,11 +7,21 @@ import {
 } from './providers.types.js';
 import { BaseProvider } from './providers.utils.js';
 
+/** Input arguments for {@link DataProvider.connect}.
+ *
+ * @property {string} serverUrl - The base url of the server to connect to.
+ * @interface
+ */
+export interface DataProviderConnectArgs {
+  serverUrl: string;
+}
+
 /**
  * The `DataProvider` facilitates interactions with the Hourglass RFQ system `/data` namespace.
  *
  * The `/data` namespaces enables clients to query information about the Hourglass RFQ system.
- * Namely, it allows clients to query the list of supported markets and their respective details.
+ * The current set of supported actions is:
+ * - Query markets (see {@link DataProvider.getMarkets})
  *
  * This class extends an event emitter and proxies events from the underlying websocket to
  * itself so that SDK consumers can listen for events without managing the websocket.
@@ -54,9 +64,8 @@ export class DataProvider extends BaseProvider<
   /**
    * Establishes a connection to the websocket server for the `/data` namespace.
    *
-   * @param {Object} params - Connection options.
-   * @param {string} params.serverUrl - The endpoint to connect to.
-   *
+   * @param {DataProviderConnectArgs} args - Input args.
+
    * @example
    * ```typescript
    * import { SERVER_URL_STAGING } from '@hourglass/sdk';
@@ -65,16 +74,16 @@ export class DataProvider extends BaseProvider<
    * dataProvider.on('connect', () => {
    *  console.log("Successfully connected to the server");
    * })
-   * dataProvider.on('connect_error', () => {
-   *  console.log("Failed to connect to the server");
+   * dataProvider.on('connect_error', (error) => {
+   *  console.error(`Failed to connect to the server: ${error.message}`);
    * })
-   * dataProvider.on('disconnect', () => {
-   *  console.log("Disconnected from the server");
+   * dataProvider.on('disconnect', (reason, description) => {
+   *  console.log(`Disconnected from the server: ${reason}`);
    * })
    * ```
    * @category Connect
    */
-  connect({ serverUrl }: { serverUrl: string }) {
+  connect({ serverUrl }: DataProviderConnectArgs) {
     super.connectEntrypoint({
       endpoint: new URL('data', serverUrl).toString(),
       auth: null,

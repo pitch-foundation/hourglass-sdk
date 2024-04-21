@@ -1,8 +1,8 @@
 import EventEmitter from 'events';
 import { Socket, io } from 'socket.io-client';
 import {
-  MAX_RETRY_ATTEMPTS,
-  RETRY_DELAY_MSECS,
+  DEFAULT_MAX_RETRIES,
+  DEFAULT_RETRY_DELAY_MSECS,
 } from './providers.constants.js';
 import {
   DataEventsMap,
@@ -118,8 +118,8 @@ export class BaseProvider<
       args ?? {};
     this.logger = debug ? logger ?? console.log : undefined;
     this.connectOpts = connectOpts ?? {};
-    this.retryDelayMsecs = retryDelayMsecs ?? RETRY_DELAY_MSECS;
-    this.maxRetries = maxRetries ?? MAX_RETRY_ATTEMPTS;
+    this.retryDelayMsecs = retryDelayMsecs ?? DEFAULT_RETRY_DELAY_MSECS;
+    this.maxRetries = maxRetries ?? DEFAULT_MAX_RETRIES;
     this.log(`initialized | ${JSON.stringify(args)}`);
   }
 

@@ -4,8 +4,8 @@ import {
   SeaportOrderComponentsEntity,
 } from '../seaport/seaport.types.js';
 import {
-  MAX_RETRY_ATTEMPTS,
-  RETRY_DELAY_MSECS,
+  DEFAULT_MAX_RETRIES,
+  DEFAULT_RETRY_DELAY_MSECS,
 } from './providers.constants.js';
 
 // ----------------------------------- Enums -----------------------------------
@@ -76,7 +76,7 @@ export type WebsocketEvent =
  * @property {boolean} [allowForceDisconnect] - Allow the client to forcibly disconnect existing sockets using a given access token.
  * The system enforces a constraint that only a single connection can exist for a given access token, as access tokens are used as a
  * session identifier. Assuming that there is an existing connection with some access token:
- * - If the flag is true, the existing socket is disconnected and a new socket is established with the same access token.
+ * - If the flag is true, the existing socket is disconnected and a new socket is established with the access token.
  * - If the flag is false, the existing socket remains connected and a connection error is thrown.
  * @interface
  */
@@ -93,8 +93,8 @@ export interface AuthBase {
  * this process, they must prove that they own the set of wallets they wish to operate from.
  *
  * @property {string} source - Source for the Taker API User, must be {@link TakerSource.API}.
- * @property {string} clientId - Client id for the taker api user.
- * @property {string} clientSecret - Client secret for the taker api user.
+ * @property {string} clientId - Client id for the taker api wallet user.
+ * @property {string} clientSecret - Client secret for the taker api wallet user.
  */
 export interface AuthTakerApiWalletUser extends AuthBase {
   source: typeof TakerSource.API;
@@ -187,6 +187,7 @@ export type Market = {
   asset1Id: number;
   asset0: Asset;
   asset1: Asset;
+  validUseCases: UseCase[];
 };
 
 export type JsonRpcMessage<M extends DataMethod | MakerMethod | TakerMethod> = {
@@ -390,8 +391,8 @@ export type SocketOnCallback = (value: string) => void;
  *  - If provided and debug is true, we use custom logging function provided.
  *  - If not provided and debug is false, logs are suppressed.
  * @property {WebsocketConnectOptions} [connectOpts] - Options that are passed through to the internal call to socket.io's `connect` method.
- * @property {number} [retryDelayMsecs] - The delay between reconnection attempts in milliseconds. Defaults to {@link RETRY_DELAY_MSECS}.
- * @property {number} [maxRetries] - The maximum number of reconnection attempts. Defaults to {@link MAX_RETRY_ATTEMPTS}.
+ * @property {number} [retryDelayMsecs] - The delay between reconnection attempts in milliseconds. Defaults to {@link DEFAULT_RETRY_DELAY_MSECS}.
+ * @property {number} [maxRetries] - The maximum number of reconnection attempts. Defaults to {@link DEFAULT_MAX_RETRIES}.
  * @interface
  */
 export type ProviderConstructorArgs = {
