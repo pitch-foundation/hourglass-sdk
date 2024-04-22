@@ -17,6 +17,7 @@ import {
   TakerMethod,
   WebsocketConnectOptions,
 } from './providers.types.js';
+import crypto from 'crypto';
 
 export class TypedEventEmitter<TEvents extends Record<string, Array<unknown>>> {
   protected _emitter = new EventEmitter();
