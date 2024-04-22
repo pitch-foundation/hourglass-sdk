@@ -1,0 +1,9 @@
+{
+  "entryPoints": ["src/chain", "src/providers", "src/seaport"],
+  "entryPointStrategy": "expand",
+  "plugin": "typedoc-material-theme",
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "categoryOrder": ["Initialization", "Connect", "Actions", "Events"],
+  "sort": "source-order"
+}

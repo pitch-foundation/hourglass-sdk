@@ -1,46 +1,36 @@
 import { JsonRpcSigner } from '@ethersproject/providers';
-import { ERC20__factory } from '../abi';
-import {
-  STAKING_ADDRESSES,
-  signSeaportOrderComponents,
-} from '../seaport/seaport.utils';
+import { ERC20__factory } from '../abi/index.js';
+import { HOURGLASS_SEAPORT_ADDRESSES } from '../seaport/seaport.utils.js';
 import { BigNumber } from 'ethers';
-import { TakerProvider } from '../events/events.taker-provider';
-import { SeaportOrderComponents } from '../seaport/seaport.types';
 
-export const approveAmount = async ({
-  signer,
-  tokenAddress,
-  amount,
-  spender = STAKING_ADDRESSES.seaportConduit,
-}: {
+/** Input arguments for {@link approveAmount}.
+ *
+ * @property {JsonRpcSigner} signer - The signer to approve the amount for.
+ * @property {string} tokenAddress - The address of the token to approve.
+ * @property {BigNumber} amount - The amount to approve.
+ * @property {string} spender - The address of the spender to approve the amount for.
+ * @interface
+ */
+export interface ApproveAmountArgs {
   signer: JsonRpcSigner;
   tokenAddress: string;
   amount: BigNumber;
   spender?: string;
-}) => {
+}
+
+/**
+ * Approve the seaport contract to spend ERC20 tokens from `tokenAddress`.
+ *
+ * @param {ApproveAmountArgs} args - Input args.
+ *
+ * @category Chain
+ */
+export const approveAmount = async ({
+  signer,
+  tokenAddress,
+  amount,
+  spender = HOURGLASS_SEAPORT_ADDRESSES.seaportConduit,
+}: ApproveAmountArgs) => {
   const erc20 = ERC20__factory.connect(tokenAddress, signer);
   return erc20.approve(spender, amount);
-};
-
-export const acceptOrder = async ({
-  signer,
-  seaportOrderComponents,
-  provider,
-  quoteId,
-}: {
-  signer: JsonRpcSigner;
-  seaportOrderComponents: SeaportOrderComponents;
-  provider: TakerProvider;
-  quoteId: number;
-}) => {
-  const signature = await signSeaportOrderComponents(
-    signer,
-    seaportOrderComponents
-  );
-  provider.acceptQuote({
-    quoteId,
-    components: seaportOrderComponents,
-    signature,
-  });
 };

@@ -1,12 +1,12 @@
-export * from './chain/chain.state';
-export * from './chain/chain.actions';
-export * from './chain/chain.adaptors';
+export * from './chain/chain.state.js';
+export * from './chain/chain.actions.js';
+export * from './chain/chain.adaptors.js';
 
-export * from './events/events.taker-provider';
-export * from './events/events.data-provider';
-export * from './events/events.maker-provider';
-export * from './events/events.types';
-export * from './events/events.constants';
+export * from './providers/public/taker.provider.js';
+export * from './providers/public/data.provider.js';
+export * from './providers/public/maker.provider.js';
+export * from './providers/providers.types.js';
+export * from './providers/providers.constants.js';
 
-export * from './seaport/seaport.utils';
-export * from './seaport/seaport.types';
+export * from './seaport/seaport.utils.js';
+export * from './seaport/seaport.types.js';

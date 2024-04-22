@@ -5,16 +5,16 @@ import {
   EIP_712_ORDER_TYPE,
   SEAPORT_CONTRACT_NAME,
   SEAPORT_CONTRACT_VERSION_V1_5,
-} from '@opensea/seaport-js/lib/constants';
-import { MulticallWrapper } from 'ethers-multicall-provider';
+} from '@opensea/seaport-js/lib/constants.js';
+import EthersMulticallProvider from 'ethers-multicall-provider';
 import { ethers } from 'ethers';
-import { keccak256 } from 'ethers/lib/utils';
-import { SeaportV5__factory } from '../abi';
-import { OrderComponentsStruct } from '../abi/SeaportV5';
+import { keccak256 } from 'ethers/lib/utils.js';
+import { SeaportV5__factory } from '../abi/index.js';
+import { OrderComponentsStruct } from '../abi/SeaportV5.js';
 
-// globalThis.Buffer = Buffer;
+const { MulticallWrapper } = EthersMulticallProvider;
 
-export const STAKING_ADDRESSES = {
+export const HOURGLASS_SEAPORT_ADDRESSES = {
   seaportRollingZone: '0x67b14Fb1876901102f3fAA4dFB958e3C63b4AA1a',
   seaportConduit: '0x9352dA82F42c5bDDe9F0b2C19D635baE39142dD8',
   seaportConduitKey:
@@ -28,11 +28,62 @@ export const SEAPORT_ORDER_TYPE = {
   PARTIAL_RESTRICTED: 3, // Partial fills supported, only offerer or zone can execute
 } as const;
 
+/**
+ * Returns the Hourglass Seaport instance.
+ *
+ * @param {JsonRpcSigner} signer - The signer to use for the seaport instance.
+ *
+ * @example Fulfilling a quote
+ * ```typescript
+ *  import {
+ *    getSeaport,
+ *    HOURGLASS_SEAPORT_ADDRESSES,
+ *    WebsocketEvent,
+ *  } from '@hourglass/sdk';
+ *
+ *  // ...init TakerProvider
+ *
+ *  let acceptedQuote;
+ *  takerProvider.on(WebsocketEvent.OrderCreated, (data, error) => {
+ *    acceptedQuote = {
+ *      seaportOrderComponents: data.components,
+ *      signature: data.signature,
+ *    };
+ *  });
+ *
+ *  // ...later
+ *
+ *  const seaportV5 = getSeaport(signer); // ethers `JsonRpcSigner`, use `getEthersSigner` adaptor if using `viem`
+ *  const response = await seaportV5.fulfillOrder({
+ *    order: {
+ *      parameters: {
+ *        ...acceptedQuote.seaportOrderComponents,
+ *        totalOriginalConsiderationItems:
+ *          acceptedQuote.seaportOrderComponents.consideration.length,
+ *      },
+ *      signature: acceptedQuote.signature,
+ *    },
+ *    accountAddress: HOURGLASS_SEAPORT_ADDRESSES.seaportRollingZone,
+ *    conduitKey: HOURGLASS_SEAPORT_ADDRESSES.seaportConduitKey,
+ *  });
+ *
+ *  const [exchangeAction] = response.actions.filter((f) => f.type === 'exchange');
+ *  if (!exchangeAction)
+ *    throw new Error('Missing exchange action for fill limit action');
+ *
+ *  await exchangeAction.transactionMethods.buildTransaction();
+ *  const { hash: txhash, wait } =
+ *    await exchangeAction.transactionMethods.transact();
+ *  const result = await wait();
+ * ```
+ * @category Seaport
+ */
 export const getSeaport = async (signer: JsonRpcSigner) => {
   const seaport = new Seaport(signer, {
     seaportVersion: '1.5',
     conduitKeyToConduit: {
-      [STAKING_ADDRESSES.seaportConduitKey]: STAKING_ADDRESSES.seaportConduit,
+      [HOURGLASS_SEAPORT_ADDRESSES.seaportConduitKey]:
+        HOURGLASS_SEAPORT_ADDRESSES.seaportConduit,
     },
   });
 
@@ -81,6 +132,43 @@ const computeDigestEip712 = (domainSeparator: string, orderHash: string) => {
   return keccak256(`0x1901${domainSeparator.slice(2)}${orderHash.slice(2)}`);
 };
 
+/**
+ * Return the Hourglass Seaport instance.
+ *
+ * @param {JsonRpcSigner} signer - The signer to sign the components with.
+ * @param {AwaitedObject<OrderComponentsStruct>} components - Seaport components to be signed.
+ *
+ * @example Signing a quote
+ * ```typescript
+ *  import {
+ *    MakerProvider,
+ *    WebsocketEvent,
+ *    signSeaportOrderComponents,
+ *  } from '@hourglass/sdk';
+ *
+ *  // ...init MakerProvider
+ *  let makerAddress;
+ *
+ *  makerProvider.on(
+ *    WebsocketEvent.QuoteAccepted,
+ *    async (data, error, callback) => {
+ *      if (error) {
+ *        console.error(`Error in ${WebsocketEvent.QuoteAccepted}: ${error}`);
+ *        return;
+ *      }
+ *      const seaportOrderComponents = data.seaportOrderComponents;
+ *      seaportOrderComponents['offerer'] = makerAddress;
+ *      seaportOrderComponents['consideration'][0]['recipient'] = makerAddress;
+ *      const signature = await signSeaportOrderComponents(
+ *        signer,
+ *        seaportOrderComponents
+ *      );
+ *      callback({ components: seaportOrderComponents, signature });
+ *    }
+ *  );
+ * ```
+ * @category Seaport
+ */
 export const signSeaportOrderComponents = async (
   signer: JsonRpcSigner,
   components: AwaitedObject<OrderComponentsStruct>
