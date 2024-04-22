@@ -86,17 +86,17 @@ export interface AuthBase {
 }
 
 /**
- * Interface for taker API wallet user authentication.
+ * Interface for taker API user authentication.
  *
- * Wallet users are a set of users who have a set of whitelisted wallets that they can operate from.
+ * API users are a set of users who have a set of whitelisted wallets that they can operate from.
  * They must undergo taker client onboarding in order to receive their client id and secret. During
  * this process, they must prove that they own the set of wallets they wish to operate from.
  *
  * @property {string} source - Source for the Taker API User, must be {@link TakerSource.API}.
- * @property {string} clientId - Client id for the taker api wallet user.
- * @property {string} clientSecret - Client secret for the taker api wallet user.
+ * @property {string} clientId - Client id for the taker api user.
+ * @property {string} clientSecret - Client secret for the taker api user.
  */
-export interface AuthTakerApiWalletUser extends AuthBase {
+export interface AuthTakerApiUser extends AuthBase {
   source: typeof TakerSource.API;
   clientId: string;
   clientSecret: string;
@@ -113,7 +113,7 @@ export interface AuthTakerApiWalletUser extends AuthBase {
  * @property {string} secret - secret for the taker API protocol user.
  * @interface
  */
-export interface AuthTakerApiProtocolUser extends AuthBase {
+export interface AuthTakerProtocolUser extends AuthBase {
   source: Exclude<TakerSource, typeof TakerSource.API>;
   secret: string;
 }
@@ -121,11 +121,9 @@ export interface AuthTakerApiProtocolUser extends AuthBase {
 /**
  * Union type for taker authentication objects.
  *
- * @type {AuthTakerApiWalletUser | AuthTakerApiProtocolUser} - Can be either AuthTakerApiWalletUser or AuthTakerApiProtocolUser.
+ * @type {AuthTakerApiUser | AuthTakerProtocolUser} - Can be either AuthTakerApiUser or AuthTakerProtocolUser.
  */
-export type AuthTakerApiUser =
-  | AuthTakerApiWalletUser
-  | AuthTakerApiProtocolUser;
+export type AuthTakerUser = AuthTakerApiUser | AuthTakerProtocolUser;
 
 /**
  * Interface for maker API user authentication
@@ -142,6 +140,8 @@ export interface AuthMakerApiUser extends AuthBase {
   clientId: string;
   clientSecret: string;
 }
+
+export type AuthMakerUser = AuthMakerApiUser;
 
 // ----------------------------------- Utility Types -----------------------------------
 

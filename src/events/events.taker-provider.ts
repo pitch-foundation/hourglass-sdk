@@ -7,7 +7,7 @@ import {
   PayloadOrderCreated,
   PayloadOrderFulfilled,
   SocketOnCallback,
-  AuthTakerApiUser,
+  AuthTakerUser,
   TakerEventsMap,
   UseCase,
   TakerMethod,
@@ -22,12 +22,12 @@ import { signSeaportOrderComponents } from '../seaport/seaport.utils.js';
 
 /** Input arguments for {@link TakerProvider.connect}.
  *
- * @property {AuthTakerApiUser} auth - The authentication object.
+ * @property {AuthTakerUser} auth - The authentication object.
  * @property {string} serverUrl - The base url of the server to connect to.
  * @interface
  */
 export interface TakerProviderConnectArgs {
-  auth: AuthTakerApiUser;
+  auth: AuthTakerUser;
   serverUrl: string;
 }
 
@@ -60,7 +60,7 @@ export interface TakerProviderConnectArgs {
  *  - If executor = {@link OrderExecutor.TAKER}, this should not be specified.
  *  - If executor = {@link OrderExecutor.MAKER}, this should be specified.
  *
- * For wallet users, the quote asset receiver must be one of their whitelisted addresses.
+ * For api users, the quote asset receiver must be one of their whitelisted addresses.
  * @property {string} [baseAmount] - The amount of the base asset the taker is selling. If specified, `quoteAmount` must not be specified.
  *
  * When a taker specifies `baseAmount` in their RFQ, their RFQ can be interpreted in the following way:
@@ -137,7 +137,7 @@ export interface TakerProviderAcceptQuoteArgs {
 export class TakerProvider extends BaseProvider<
   TakerEventsMap,
   TakerMethod,
-  AuthTakerApiUser
+  AuthTakerUser
 > {
   /*//////////////////////////////////////////////////////////////
                               CONNECT

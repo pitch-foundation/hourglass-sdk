@@ -8,11 +8,11 @@ import {
   DataEventsMap,
   DataMethod,
   JsonRpcMessage,
-  AuthMakerApiUser,
+  AuthMakerUser,
   MakerEventsMap,
   MakerMethod,
   ProviderConstructorArgs,
-  AuthTakerApiUser,
+  AuthTakerUser,
   TakerEventsMap,
   TakerMethod,
   WebsocketConnectOptions,
@@ -98,7 +98,7 @@ export class ReconnectionState {
 export class BaseProvider<
   TEvents extends DataEventsMap | MakerEventsMap | TakerEventsMap,
   TMethod extends DataMethod | MakerMethod | TakerMethod,
-  TAuth extends AuthMakerApiUser | AuthTakerApiUser | null
+  TAuth extends AuthMakerUser | AuthTakerUser | null
 > extends TypedEventEmitter<TEvents> {
   private socket: Socket | undefined;
   private globalMessages: JsonRpcMessage<TMethod>[] = [];

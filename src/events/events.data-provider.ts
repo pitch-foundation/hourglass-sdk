@@ -111,7 +111,7 @@ export class DataProvider extends BaseProvider<
    * @category Actions
    */
   getMarkets() {
-    this.log('Requesting markets');
+    this.log('Querying markets');
     this.emitMessage(DataMethod.hg_getMarkets, {});
   }
 }

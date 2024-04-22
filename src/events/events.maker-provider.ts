@@ -1,6 +1,6 @@
 import { Socket } from 'socket.io-client';
 import {
-  AuthMakerApiUser,
+  AuthMakerUser,
   MakerEventsMap,
   MakerMethod,
   PayloadAccessToken,
@@ -19,12 +19,12 @@ import {
 import { BaseProvider, ReconnectionState } from './providers.utils.js';
 
 /**
- * @property {AuthMakerApiUser} auth - The authentication object.
+ * @property {AuthMakerUser} auth - The authentication object.
  * @property {string} serverUrl - The base url of the server to connect to.
  * @interface
  */
 export interface MakerConnectArgs {
-  auth: AuthMakerApiUser;
+  auth: AuthMakerUser;
   serverUrl: string;
 }
 
@@ -79,7 +79,7 @@ export interface MakerProviderUnsubscribeFromMarketArgs {
 export class MakerProvider extends BaseProvider<
   MakerEventsMap,
   MakerMethod,
-  AuthMakerApiUser
+  AuthMakerUser
 > {
   /*//////////////////////////////////////////////////////////////
                               CONNECT
