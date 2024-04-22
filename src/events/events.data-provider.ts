@@ -104,8 +104,12 @@ export class DataProvider extends BaseProvider<
    * @example
    * ```typescript
    *  dataProvider.getMarkets();
-   *  dataProvider.on(DataMethod.hg_getMarkets, (data: PayloadHgGetMarkets, err) => {
-   *    // Check for error and handle response if successful
+   *  dataProvider.on(DataMethod.hg_getMarkets, (data: PayloadHgGetMarkets, error) => {
+   *    if (error) {
+   *      console.error(`Error querying markets: ${error}`);
+   *      return;
+   *    }
+   *    console.log(`Markets: ${markets}`);
    *  });
    * ```
    * @category Actions

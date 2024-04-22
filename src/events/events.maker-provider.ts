@@ -232,8 +232,12 @@ export class MakerProvider extends BaseProvider<
    *    quoteAmount: '1000000000000000000', // 1 ether in wei
    *    rfqId: 2,
    *  });
-   *  makerProvider.on(MakerMethod.hg_submitQuote, (data: PayloadHgSubmitQuote, err) => {
-   *    // Check for error and handle response if successful
+   *  makerProvider.on(MakerMethod.hg_submitQuote, (data: PayloadHgSubmitQuote, error) => {
+   *    if (error) {
+   *      console.error(`Error submitting quote: ${error}`);
+   *      return;
+   *    }
+   *    console.log(`Successfully submitted quote: ${data}`);
    *  });
    * ```
    * @category Actions
@@ -266,8 +270,12 @@ export class MakerProvider extends BaseProvider<
    * @example
    * ```typescript
    *  makerProvider.subscribeToMarket({ marketId: 1 });
-   *  makerProvider.on(MakerMethod.hg_subscribeToMarket, (data: PayloadHgSubscribeToMarket, err) => {
-   *    // Check for error and handle response if successful
+   *  makerProvider.on(MakerMethod.hg_subscribeToMarket, (data: PayloadHgSubscribeToMarket, error) => {
+   *    if (error) {
+   *      console.error(`Error subscribing to market: ${error}`);
+   *      return;
+   *    }
+   *    console.log(`Successfully subscribed to market ${data}`}`)
    *  });
    * ```
    * @category Actions
@@ -293,8 +301,12 @@ export class MakerProvider extends BaseProvider<
    * @example
    * ```typescript
    *  makerProvider.unsubscribeFromMarket({ marketId: 1 });
-   *  makerProvider.on(MakerMethod.hg_unsubscribeFromMarket, (data: PayloadHgUnsubscribeFromMarket, err) => {
-   *    // Check for error and handle response if successful
+   *  makerProvider.on(MakerMethod.hg_unsubscribeFromMarket, (data: PayloadHgUnsubscribeFromMarket, error) => {
+   *    if (error) {
+   *      console.error(`Error unsubscribing from market: ${error}`);
+   *      return;
+   *    }
+   *    console.log(`Successfully unsubscribed from market ${data}`);
    *  });
    * ```
    * @category Actions

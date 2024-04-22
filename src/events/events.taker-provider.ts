@@ -275,9 +275,20 @@ export class TakerProvider extends BaseProvider<
    *    // no use case specified -> UseCase.DEFAULT
    *    // no metadata required for default use case
    *  });
-   *  takerProvider.on(TakerMethod.hg_requestQuote, (data: PayloadBestQuote, err) => {
-   *    // Check for error and handle response if successful
+   *  takerProvider.on(TakerMethod.hg_requestQuote, (data: PayloadHgRequestQuote, error) => {
+   *    if (error) {
+   *      console.error(`Error requesting quote: ${error}`);
+   *      return;
+   *    }
+   *    // Call was successful, store details of created RFQ locally
    *  });
+   *  takerProvider.on(WebsocketEvent.BestQuote, (data: PayloadBestQuote, error) => {
+   *    if (error) {
+   *      console.error(`Error receiving best quote: ${error}`);
+   *      return;
+   *    }
+   *   // New best quote received, update local state
+   *  })
    * ```
    * @category Actions
    */
@@ -312,20 +323,34 @@ export class TakerProvider extends BaseProvider<
    *
    * @example
    * ```typescript
-   *  // rfq.executor = OrderExecutor.TAKER
+   *  // quote1.rfq.executor = OrderExecutor.TAKER
    *  takerProvider.acceptQuote({
    *    quoteId: 1,
    *  });
    *
-   *  // rfq.executor = OrderExecutor.MAKER
+   *  // quote2.rfq.executor = OrderExecutor.MAKER
    *  takerProvider.acceptQuote({
-   *    quoteId: 1,
+   *    quoteId: 2,
    *    components,
    *    signature,
    *  });
    *
-   *  takerProvider.on(TakerMethod.hg_acceptQuote, (data: PayloadHgAcceptQuote, err) => {
-   *    // Check for error and handle response if successful
+   *  takerProvider.on(TakerMethod.hg_acceptQuote, (data: PayloadHgAcceptQuote, error) => {
+   *    if (error) {
+   *      console.error(`Error accepting quote: ${error}`);
+   *      return;
+   *    }
+   *    console.log(`Successfully accepted quote ${data}`);
+   *  });
+   *
+   *  // Will only be triggered if `executor` is `OrderExecutor.TAKER`
+   *  // In this example, this would happen for quote id 1.
+   *  takerProvider.on(WebsocketEvent.OrderCreated, (data: PayloadOrderCreated, error) => {
+   *    if (error) {
+   *      console.error(`Error receiving order created: ${error}`);
+   *      return;
+   *    }
+   *    console.log(`Recieved order to execute: ${data}`);
    *  });
    * ```
    * @category Actions
