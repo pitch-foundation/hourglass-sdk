@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-console */
+ 
 import chalk from "chalk";
 
 export interface ILogger {

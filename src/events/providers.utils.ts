@@ -1,45 +1,57 @@
 import EventEmitter from 'events';
 import { Socket, io } from 'socket.io-client';
-import { MAX_RETRY_ATTEMPTS, RETRY_DELAY } from './events.constants.js';
+import {
+  DEFAULT_MAX_RETRIES,
+  DEFAULT_RETRY_DELAY_MSECS,
+} from './events.constants.js';
 import {
   DataEventsMap,
   DataMethod,
   JsonRpcMessage,
-  MakerAuth,
+  AuthMakerUser,
   MakerEventsMap,
   MakerMethod,
   ProviderConstructorArgs,
-  TakerAuth,
+  AuthTakerUser,
   TakerEventsMap,
   TakerMethod,
   WebsocketConnectOptions,
-} from './events.types.js';
+} from './providers.types.js';
 
-class TypedEventEmitter<TEvents extends Record<string, Array<any>>> {
-  _emitter = new EventEmitter();
+export class TypedEventEmitter<TEvents extends Record<string, Array<unknown>>> {
+  protected _emitter = new EventEmitter();
 
-  emit<TEventName extends keyof TEvents & string>(
+  protected emit<TEventName extends keyof TEvents & string>(
     eventName: TEventName,
-    ...eventArg: TEvents[TEventName]
+    ...eventArgs: TEvents[TEventName]
   ) {
-    this._emitter.emit(eventName, ...eventArg);
+    this._emitter.emit(eventName, ...eventArgs);
   }
 
+  /** Listen for event on event emitter.
+   *
+   * @category Events
+   */
   on<TEventName extends keyof TEvents & string>(
     eventName: TEventName,
-    handler: (...eventArg: TEvents[TEventName]) => void
+    handler: (...eventArgs: TEvents[TEventName]) => void
   ) {
     this._emitter.on(eventName, handler);
   }
 
+  /** Stop listening for event on event emitter.
+   *
+   * @category Events
+   */
   off<TEventName extends keyof TEvents & string>(
     eventName: TEventName,
-    handler: (...eventArg: TEvents[TEventName]) => void
+    handler: (...eventArgs: TEvents[TEventName]) => void
   ) {
     this._emitter.off(eventName, handler);
   }
 }
 
+/** @internal */
 export class ReconnectionState {
   retries: number;
 
@@ -76,10 +88,17 @@ export class ReconnectionState {
   }
 }
 
+/**
+ * @template TEvents - The event map for the provider.
+ * @template TMethod - The method enum for the provider.
+ * @template TAuth - The auth type for the provider.
+ *
+ * @
+ */
 export class BaseProvider<
   TEvents extends DataEventsMap | MakerEventsMap | TakerEventsMap,
   TMethod extends DataMethod | MakerMethod | TakerMethod,
-  TAuth extends MakerAuth | TakerAuth | null
+  TAuth extends AuthMakerUser | AuthTakerUser | null
 > extends TypedEventEmitter<TEvents> {
   private socket: Socket | undefined;
   private globalMessages: JsonRpcMessage<TMethod>[] = [];
@@ -88,14 +107,19 @@ export class BaseProvider<
   private retryDelayMsecs: number;
   private maxRetries: number;
 
+  /**
+   *
+   * @param {ProviderConstructorArgs} [args] - Provider constructor args.
+   * @category Initialization
+   */
   constructor(args?: ProviderConstructorArgs) {
     super();
     const { logger, debug, connectOpts, retryDelayMsecs, maxRetries } =
       args ?? {};
     this.logger = debug ? logger ?? console.log : undefined;
     this.connectOpts = connectOpts ?? {};
-    this.retryDelayMsecs = retryDelayMsecs ?? RETRY_DELAY;
-    this.maxRetries = maxRetries ?? MAX_RETRY_ATTEMPTS;
+    this.retryDelayMsecs = retryDelayMsecs ?? DEFAULT_RETRY_DELAY_MSECS;
+    this.maxRetries = maxRetries ?? DEFAULT_MAX_RETRIES;
     this.log(`initialized | ${JSON.stringify(args)}`);
   }
 
@@ -138,6 +162,7 @@ export class BaseProvider<
   }
 
   // Must be overriden by subclasses. Should attach socket listeners that proxy to event emitter.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   protected setupListeners(socket: Socket, rs: ReconnectionState) {
     throw new Error('Method not implemented.');
   }

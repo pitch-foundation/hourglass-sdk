@@ -5,7 +5,7 @@ export * from './chain/chain.adaptors.js';
 export * from './events/events.taker-provider.js';
 export * from './events/events.data-provider.js';
 export * from './events/events.maker-provider.js';
-export * from './events/events.types.js';
+export * from './events/providers.types.js';
 export * from './events/events.constants.js';
 
 export * from './seaport/seaport.utils.js';
