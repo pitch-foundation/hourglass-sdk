@@ -1,6 +1,6 @@
 import { JsonRpcSigner } from '@ethersproject/providers';
-import { ERC20__factory } from '../abi';
-import { HOURGLASS_SEAPORT_ADDRESSES } from '../seaport/seaport.utils';
+import { ERC20__factory } from '../abi/index.js';
+import { HOURGLASS_SEAPORT_ADDRESSES } from '../seaport/seaport.utils.js';
 
 /**
  * Get the balance and allowance of an ERC20 token.

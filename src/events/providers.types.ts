@@ -2,7 +2,11 @@ import { ManagerOptions, Socket, SocketOptions } from 'socket.io-client';
 import {
   SeaportOrderComponents,
   SeaportOrderComponentsEntity,
-} from '../seaport/seaport.types';
+} from '../seaport/seaport.types.js';
+import {
+  DEFAULT_MAX_RETRIES,
+  DEFAULT_RETRY_DELAY_MSECS,
+} from './events.constants.js';
 
 // ----------------------------------- Enums -----------------------------------
 
@@ -64,28 +68,80 @@ export type WebsocketEvent =
 
 // ----------------------------------- Authentication -----------------------------------
 
-type AuthBase = {
+/**
+ * Base interface for authentication
+ * @property {string} [token] - The access token.
+ *  - If provided, allows the user to skip authentication and resume interactions from previous sessions.
+ *  - If not provided, a new access token will be issued to the user upon a successful authentication.
+ * @property {boolean} [allowForceDisconnect] - Allow the client to forcibly disconnect existing sockets using a given access token.
+ * The system enforces a constraint that only a single connection can exist for a given access token, as access tokens are used as a
+ * session identifier. Assuming that there is an existing connection with some access token:
+ * - If the flag is true, the existing socket is disconnected and a new socket is established with the access token.
+ * - If the flag is false, the existing socket remains connected and a connection error is thrown.
+ * @interface
+ */
+export interface AuthBase {
   token?: string;
   allowForceDisconnect?: boolean;
-};
+}
 
-export type TakerAuth = AuthBase &
-  (
-    | {
-        source: typeof TakerSource.API;
-        clientId: string;
-        clientSecret: string;
-      }
-    | {
-        source: Exclude<TakerSource, typeof TakerSource.API>;
-        secret: string;
-      }
-  );
-
-export type MakerAuth = AuthBase & {
+/**
+ * Interface for taker API user authentication.
+ *
+ * API users are a set of users who have a set of whitelisted wallets that they can operate from.
+ * They must undergo taker client onboarding in order to receive their client id and secret. During
+ * this process, they must prove that they own the set of wallets they wish to operate from.
+ *
+ * @property {string} source - Source for the Taker API User, must be {@link TakerSource.API}.
+ * @property {string} clientId - Client id for the taker api user.
+ * @property {string} clientSecret - Client secret for the taker api user.
+ */
+export interface AuthTakerApiUser extends AuthBase {
+  source: typeof TakerSource.API;
   clientId: string;
   clientSecret: string;
-};
+}
+
+/**
+ * Interface for Taker API protocol user authentication.
+ *
+ * Protocol users are users who are related to some external protocol. These users will not have a set of whitelisted wallets (responsibility
+ * of proving wallet ownership prior to submitting requests is outsourced to external protocols). Each protocol user will have a secret that
+ * can be used by multiple users of their protocol for authentication.
+ *
+ * @property {Exclude<TakerSource, typeof TakerSource.API>} source - Source for the taker API protocol user, set to any {@link TakerSource} except {@link TakerSource.API}.
+ * @property {string} secret - secret for the taker API protocol user.
+ * @interface
+ */
+export interface AuthTakerProtocolUser extends AuthBase {
+  source: Exclude<TakerSource, typeof TakerSource.API>;
+  secret: string;
+}
+
+/**
+ * Union type for taker authentication objects.
+ *
+ * @type {AuthTakerApiUser | AuthTakerProtocolUser} - Can be either AuthTakerApiUser or AuthTakerProtocolUser.
+ */
+export type AuthTakerUser = AuthTakerApiUser | AuthTakerProtocolUser;
+
+/**
+ * Interface for maker API user authentication
+ *
+ * Maker api are a set of users who have a set of whitelisted wallets that they can operate from.
+ * They must undergo maker client onboarding in order to receive their client id and secret. During
+ * this process, they must prove that they own the set of wallets they wish to operate from.
+ *
+ * @property {string} clientId - Client id for the maker api user.
+ * @property {string} clientSecret - Client secret for the maker api user.
+ * @interface
+ */
+export interface AuthMakerApiUser extends AuthBase {
+  clientId: string;
+  clientSecret: string;
+}
+
+export type AuthMakerUser = AuthMakerApiUser;
 
 // ----------------------------------- Utility Types -----------------------------------
 
@@ -131,12 +187,13 @@ export type Market = {
   asset1Id: number;
   asset0: Asset;
   asset1: Asset;
+  validUseCases: UseCase[];
 };
 
 export type JsonRpcMessage<M extends DataMethod | MakerMethod | TakerMethod> = {
   jsonrpc: string;
   method: M;
-  params: any;
+  params: unknown;
   id: string;
 };
 
@@ -217,6 +274,7 @@ export type QuoteAcceptedCallbackArgs = {
   signature: string;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type PayloadMessage = { id: string; result: any; error: any };
 
 // ----------------------------------- Payloads - JSON RPC Methods - Taker API -----------------------------------
@@ -270,17 +328,20 @@ export type PayloadHgGetMarkets = {
 
 // ----------------------------------- Event Maps -----------------------------------
 
-export type EventsMapEntryArgs<T extends any> =
+export type EventsMapEntryArgs<T> =
   | [data: T, error: undefined]
   | [data: undefined, error: object];
 
-export type EventsMapEntryArgsWithCallback<T extends any, C extends any> =
+export type EventsMapEntryArgsWithCallback<T, C> =
   | [data: T, error: undefined, callback: (data: C) => void]
   | [data: undefined, error: object];
 
 type SocketIoEventsMap = {
   connect: [];
-  disconnect: [reason: Socket.DisconnectReason, description: any | undefined];
+  disconnect: [
+    reason: Socket.DisconnectReason,
+    description: unknown | undefined
+  ];
   connect_error: [error: Error];
 };
 
@@ -322,9 +383,21 @@ export type SocketOnCallback = (value: string) => void;
 
 // ----------------------------------- Providers -----------------------------------
 
+/**
+ * Constructor arguments to the base provider class.
+ * @property {boolean} [debug] - Flag to enable / disable logging.
+ * @property {Function} [logger] - A function that logs messages.
+ *  - If not provided and debug is true, logs are printed to the console.
+ *  - If provided and debug is true, we use custom logging function provided.
+ *  - If not provided and debug is false, logs are suppressed.
+ * @property {WebsocketConnectOptions} [connectOpts] - Options that are passed through to the internal call to socket.io's `connect` method.
+ * @property {number} [retryDelayMsecs] - The delay between reconnection attempts in milliseconds. Defaults to {@link DEFAULT_RETRY_DELAY_MSECS}.
+ * @property {number} [maxRetries] - The maximum number of reconnection attempts. Defaults to {@link DEFAULT_MAX_RETRIES}.
+ * @interface
+ */
 export type ProviderConstructorArgs = {
-  logger?: (message: string) => void;
   debug?: boolean;
+  logger?: (message: string) => void;
   connectOpts?: WebsocketConnectOptions;
   maxRetries?: number;
   retryDelayMsecs?: number;

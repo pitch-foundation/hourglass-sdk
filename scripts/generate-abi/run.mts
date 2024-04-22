@@ -1,31 +1,31 @@
-import { fileURLToPath } from "url";
-import path from "path";
-import { runTypeChain } from "typechain";
-import fse from "fs-extra";
-import { execa } from "execa";
-import glob from "glob";
-import chalk from "chalk";
-import { logger as scriptLogger } from "../logger.mjs";
+import { fileURLToPath } from 'url';
+import path from 'path';
+import { runTypeChain } from 'typechain';
+import fse from 'fs-extra';
+import { execa } from 'execa';
+import glob from 'glob';
+import chalk from 'chalk';
+import { logger as scriptLogger } from '../logger.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const logger = scriptLogger("generate-abi");
+const logger = scriptLogger('generate-abi');
 
 (async () => {
-  logger.info("Started");
+  logger.info('Started');
 
   const cwd = process.cwd();
   const inputJsonDirectory = path
-    .join(__dirname, "abi-json")
+    .join(__dirname, 'abi-json')
     .split(path.sep)
-    .join("/");
+    .join('/');
   const outputJsonDirectory = path
-    .join(__dirname, "abi-json/temp")
+    .join(__dirname, 'abi-json/temp')
     .split(path.sep)
-    .join("/");
+    .join('/');
   const typesOutputDirectory = path
-    .join(process.cwd(), "src/abi")
+    .join(process.cwd(), 'src/abi')
     .split(path.sep)
-    .join("/");
+    .join('/');
 
   logger.info(`Using ABI JSON directory ${inputJsonDirectory}`);
   logger.info(
@@ -33,18 +33,18 @@ const logger = scriptLogger("generate-abi");
   );
 
   const filesToDelete = glob.sync(
-    path.join(typesOutputDirectory, "**/!(*.md)").split(path.sep).join("/")
+    path.join(typesOutputDirectory, '**/!(*.md)').split(path.sep).join('/')
   );
   filesToDelete?.forEach((f) =>
     fse.rmSync(f, { recursive: true, force: true })
   );
-  logger.info("Deleted existing TypeChain files in types output directory");
+  logger.info('Deleted existing TypeChain files in types output directory');
 
   await fse.rm(outputJsonDirectory, { recursive: true, force: true });
-  logger.info("Deleted existing files in JSON output temporary directory");
+  logger.info('Deleted existing files in JSON output temporary directory');
 
   const abiJsonFiles: string[] = glob.sync(
-    path.join(inputJsonDirectory, `*.json`).split(path.sep).join("/")
+    path.join(inputJsonDirectory, `*.json`).split(path.sep).join('/')
   );
 
   logger.info(`Found ${abiJsonFiles.length} ABI JSON files`);
@@ -57,10 +57,10 @@ const logger = scriptLogger("generate-abi");
     const finalOutputFile = path
       .join(outputJsonDirectory, fileName)
       .split(path.sep)
-      .join("/");
+      .join('/');
     await fse.copy(file, finalOutputFile, { overwrite: true });
 
-    const fileData = await fse.readFile(finalOutputFile, "utf8");
+    const fileData = await fse.readFile(finalOutputFile, 'utf8');
     const parsedFileData = JSON.parse(fileData);
 
     // Remove bytecode in case the ABI JSON came from a compiler
@@ -70,7 +70,7 @@ const logger = scriptLogger("generate-abi");
     await fse.writeFile(
       finalOutputFile,
       JSON.stringify(parsedFileData.abi ?? parsedFileData),
-      "utf8"
+      'utf8'
     );
 
     logger.info(
@@ -79,9 +79,9 @@ const logger = scriptLogger("generate-abi");
   }
 
   const jsonGlobPath = path
-    .join(outputJsonDirectory, "**/*.json")
+    .join(outputJsonDirectory, '**/*.json')
     .split(path.sep)
-    .join("/");
+    .join('/');
   const files = glob.sync(jsonGlobPath);
 
   if (!files?.length) {
@@ -91,19 +91,19 @@ const logger = scriptLogger("generate-abi");
   }
 
   // Run prettier formatting on output
-  const promiseForPrettier = execa("npx", [
-    "prettier",
-    "--write",
+  const promiseForPrettier = execa('npx', [
+    'prettier',
+    '--write',
     `${outputJsonDirectory}/**/*.json`,
   ]);
 
-  promiseForPrettier.stdout?.on("data", (data) => {
+  promiseForPrettier.stdout?.on('data', (data) => {
     if (data.length) {
       logger.info(`(prettier) Formatted ${chalk(data).trim()}`);
     }
   });
 
-  promiseForPrettier.stderr?.on("data", (data) => {
+  promiseForPrettier.stderr?.on('data', (data) => {
     if (data.length) {
       logger.error(`(prettier) Formatted ${chalk(data).trim()}`);
     }
@@ -118,29 +118,35 @@ const logger = scriptLogger("generate-abi");
     filesToProcess: files,
     allFiles: files,
     outDir: typesOutputDirectory,
-    target: "ethers-v5",
+    target: 'ethers-v5',
+    flags: {
+      node16Modules: true,
+      alwaysGenerateOverloads: true,
+      discriminateTypes: true,
+      environment: 'hardhat',
+    },
   });
 
   logger.info(`Generated ${result.filesGenerated} files from the ABI data`);
 
   if (result.filesGenerated === 0) {
-    throw new Error("Could not generate any files from given ABI config");
+    throw new Error('Could not generate any files from given ABI config');
   }
 
   // Transform factories files to remove gas, which causes compile errors
   logger.info(`Transforming output...`);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const outputFactoryFiles: any[] = glob.sync(
-    path.join(typesOutputDirectory, "factories/*.ts").split(path.sep).join("/")
+    path.join(typesOutputDirectory, 'factories/*.ts').split(path.sep).join('/')
   );
 
   if (!outputFactoryFiles || outputFactoryFiles.length === 0) {
-    throw new Error("Could not find any outputted factory files to transform");
+    throw new Error('Could not find any outputted factory files to transform');
   }
 
   // Remove invalid items from the ABI JSON
   for (const file of outputFactoryFiles) {
-    let fileData = await fse.readFile(file, "utf8");
+    let fileData = await fse.readFile(file, 'utf8');
     const containsBadData = fileData.search(/gas:[\s+\d+]+,/g) >= 0;
     if (containsBadData) {
       logger.warn(
@@ -148,8 +154,8 @@ const logger = scriptLogger("generate-abi");
           file
         )} contains data that will cause compile errors. We will transform the file. `
       );
-      fileData = fileData.replace(/gas:[\s+\d+]+,/g, () => "");
-      await fse.writeFile(file, fileData, "utf8");
+      fileData = fileData.replace(/gas:[\s+\d+]+,/g, () => '');
+      await fse.writeFile(file, fileData, 'utf8');
     }
   }
 
@@ -159,11 +165,11 @@ const logger = scriptLogger("generate-abi");
     const finalOutputFile = path
       .join(inputJsonDirectory, fileName)
       .split(path.sep)
-      .join("/");
+      .join('/');
     await fse.copy(file, finalOutputFile, { overwrite: true });
   }
 
   await fse.rm(outputJsonDirectory, { recursive: true, force: true });
 
-  logger.info("Completed");
+  logger.info('Completed');
 })();

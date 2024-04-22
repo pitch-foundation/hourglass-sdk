@@ -5,12 +5,14 @@ import {
   EIP_712_ORDER_TYPE,
   SEAPORT_CONTRACT_NAME,
   SEAPORT_CONTRACT_VERSION_V1_5,
-} from '@opensea/seaport-js/lib/constants';
-import { MulticallWrapper } from 'ethers-multicall-provider';
+} from '@opensea/seaport-js/lib/constants.js';
+import EthersMulticallProvider from 'ethers-multicall-provider';
 import { ethers } from 'ethers';
-import { keccak256 } from 'ethers/lib/utils';
-import { SeaportV5__factory } from '../abi';
-import { OrderComponentsStruct } from '../abi/SeaportV5';
+import { keccak256 } from 'ethers/lib/utils.js';
+import { SeaportV5__factory } from '../abi/index.js';
+import { OrderComponentsStruct } from '../abi/SeaportV5.js';
+
+const { MulticallWrapper } = EthersMulticallProvider;
 
 export const HOURGLASS_SEAPORT_ADDRESSES = {
   seaportRollingZone: '0x67b14Fb1876901102f3fAA4dFB958e3C63b4AA1a',

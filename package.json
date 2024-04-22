@@ -3,12 +3,20 @@
   "version": "0.0.1",
   "license": "MIT",
   "type": "module",
-  "main": "dist/index.js",
+  "exports": "./dist/index.js",
   "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pitch-foundation/hourglass-sdk.git"
+  },
+  "engines": {
+    "node": ">=16"
+  },
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf out",
     "prepare": "npm run build",
+    "docs": "typedoc --options typedoc.json",
     "typecheck": "tsc --noEmit",
     "gen:abi": "tsx scripts/generate-abi/run.mts"
   },
@@ -36,6 +44,8 @@
     "ts-node": "^10.9.1",
     "tsx": "^3.12.6",
     "typechain": "^8.3.1",
+    "typedoc": "^0.25.13",
+    "typedoc-material-theme": "^1.0.2",
     "typescript": "^5.2.2"
   }
 }
