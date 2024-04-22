@@ -3,8 +3,13 @@ import { ERC20__factory } from '../abi/index.js';
 import { HOURGLASS_SEAPORT_ADDRESSES } from '../seaport/seaport.utils.js';
 
 /**
- * Get the balance and allowance of an ERC20 token.
- * The default spender is the seaport conduit.
+ * Get the balance and allowance of an ERC20 token. The default spender is the seaport conduit.
+ *
+ * @param {JsonRpcSigner} signer - The signer to sign the components with.
+ * @param {string} tokenAddress - The address of the token to get the balance and allowance of.
+ * @param {string} spender - The address of the spender to get the allowance for.
+ *
+ * @category Chain
  */
 export const getBalanceAndAllowance = async (
   signer: JsonRpcSigner,
