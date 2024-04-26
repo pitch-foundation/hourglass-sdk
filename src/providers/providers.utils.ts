@@ -303,7 +303,17 @@ export class BaseProvider<
                                 DISCONNECT
       //////////////////////////////////////////////////////////////*/
 
-  disconnect() {
+  /**
+   * Disconnects the socket manually. In that case, the socket will not try to reconnect.
+   *
+   * @example
+   * provider.on("disconnect", (reason) => {
+   *   // console.log(reason); prints "io client disconnect"
+   * });
+   *
+   * provider.disconnect();
+   */
+  public disconnect() {
     if (this.socket) {
       this.socket.disconnect();
     }
