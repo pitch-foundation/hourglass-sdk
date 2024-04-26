@@ -17,7 +17,7 @@ import {
   TakerMethod,
   WebsocketConnectOptions,
 } from './providers.types.js';
-import crypto from 'crypto';
+import { v4 as uuidv4 } from 'uuid';
 
 export class TypedEventEmitter<TEvents extends Record<string, Array<unknown>>> {
   protected _emitter = new EventEmitter();
@@ -141,7 +141,7 @@ export class BaseProvider<
       jsonrpc: '2.0',
       method: method,
       params: params,
-      id: crypto.randomUUID(),
+      id: uuidv4(),
     };
     this.globalMessages.push(message);
     this.log(`Emitting message: ${JSON.stringify(message)}`);
@@ -267,6 +267,15 @@ export class BaseProvider<
         rs.reset();
         return;
       }
+
+      // If we called socket.disconnect() explicitly, we don't want to reconnect
+      if (reason === 'io server disconnect') {
+        this.log(
+          'Explicit disconnect on server side. Not trying to reconnect.'
+        );
+        rs.reset();
+        return;
+      }
       reconnect();
     });
 
@@ -288,5 +297,25 @@ export class BaseProvider<
     // AccessToken event is emitted. This enables session re-establishment.
     const rs = new ReconnectionState(this.retryDelayMsecs);
     this.connectScoped(endpoint, auth, rs);
+  }
+
+  /*//////////////////////////////////////////////////////////////
+                                DISCONNECT
+      //////////////////////////////////////////////////////////////*/
+
+  /**
+   * Disconnects the socket manually. In that case, the socket will not try to reconnect.
+   *
+   * @example
+   * provider.on("disconnect", (reason) => {
+   *   // console.log(reason); prints "io client disconnect"
+   * });
+   *
+   * provider.disconnect();
+   */
+  public disconnect() {
+    if (this.socket) {
+      this.socket.disconnect();
+    }
   }
 }
