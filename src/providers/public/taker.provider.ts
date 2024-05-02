@@ -147,7 +147,9 @@ export class TakerProvider extends BaseProvider<
     socket.on(
       WebsocketEvent.AccessToken,
       (data: PayloadAccessToken, callback: SocketOnCallback) => {
-        this.log(`Received access token: ${data.accessToken}`);
+        this.log(
+          `Event '${WebsocketEvent.AccessToken}': ${JSON.stringify(data)}`
+        );
         rs.setAccessToken(data.accessToken);
         this.emit(WebsocketEvent.AccessToken, data, undefined);
         callback('ACK');
@@ -157,7 +159,9 @@ export class TakerProvider extends BaseProvider<
     socket.on(
       WebsocketEvent.BestQuote,
       (data: PayloadBestQuote, callback: SocketOnCallback) => {
-        this.log(`Received best quote: ${JSON.stringify(data)}`);
+        this.log(
+          `Event '${WebsocketEvent.BestQuote}': ${JSON.stringify(data)}`
+        );
         this.emit(WebsocketEvent.BestQuote, data, undefined);
         callback('ACK');
       }
@@ -166,7 +170,9 @@ export class TakerProvider extends BaseProvider<
     socket.on(
       WebsocketEvent.OrderFulfilled,
       (data: PayloadOrderFulfilled, callback: SocketOnCallback) => {
-        this.log(`Received order fulfilled: ${JSON.stringify(data)}`);
+        this.log(
+          `Event '${WebsocketEvent.OrderFulfilled}': ${JSON.stringify(data)}`
+        );
         this.emit(WebsocketEvent.OrderFulfilled, data, undefined);
         callback('ACK');
       }
@@ -175,7 +181,9 @@ export class TakerProvider extends BaseProvider<
     socket.on(
       WebsocketEvent.OrderCreated,
       (data: PayloadOrderCreated, callback: SocketOnCallback) => {
-        this.log(`Received order created: ${JSON.stringify(data)}`);
+        this.log(
+          `Event '${WebsocketEvent.OrderCreated}': ${JSON.stringify(data)}`
+        );
         this.emit(WebsocketEvent.OrderCreated, data, undefined);
         callback('ACK');
       }

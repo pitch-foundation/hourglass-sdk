@@ -62,6 +62,7 @@ export const WebsocketEvent = {
   QuoteAccepted: 'QuoteAccepted',
   RequestForQuoteBroadcast: 'RequestForQuoteBroadcast',
   BestQuote: 'BestQuote',
+  MakerOrderValidated: 'MakerOrderValidated',
 } as const;
 export type WebsocketEvent =
   (typeof WebsocketEvent)[keyof typeof WebsocketEvent];
@@ -239,16 +240,20 @@ export type PayloadOrderCreated = {
 };
 
 export type PayloadOrderFulfilled = {
-  id: number;
-  createdAt: Date;
-  orderId: number;
-  orderHash: string;
-  offerer: string;
-  zone: string;
-  recipient: string;
-  block: number;
-  transactionHash: string;
-  logIndex: number;
+  rfqId: number;
+  quoteId: number;
+  fill: {
+    id: number;
+    createdAt: Date;
+    orderId: number;
+    orderHash: string;
+    offerer: string;
+    zone: string;
+    recipient: string;
+    block: number;
+    transactionHash: string;
+    logIndex: number;
+  };
 };
 
 export type PayloadQuoteAccepted = {
@@ -268,6 +273,20 @@ export type PayloadRequestForQuoteBroadcast = {
   baseAmount: string | null;
   quoteAmount: string | null;
 };
+
+export type PayloadMakerOrderValidated =
+  | {
+      valid: true;
+      rfqId: number;
+      quoteId: number;
+      orderHash: string;
+    }
+  | {
+      valid: false;
+      rfqId: number;
+      quoteId: number;
+      error: string;
+    };
 
 export type QuoteAcceptedCallbackArgs = {
   components: SeaportOrderComponents;
@@ -366,6 +385,7 @@ export type MakerEventsMap = {
     QuoteAcceptedCallbackArgs
   >;
   [WebsocketEvent.AccessToken]: EventsMapEntryArgs<PayloadAccessToken>;
+  [WebsocketEvent.MakerOrderValidated]: EventsMapEntryArgs<PayloadMakerOrderValidated>;
 } & SocketIoEventsMap;
 
 export type DataEventsMap = {
