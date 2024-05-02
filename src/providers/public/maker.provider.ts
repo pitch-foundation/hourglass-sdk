@@ -15,6 +15,7 @@ import {
   PayloadHgSubscribeToMarket,
   PayloadHgSubmitQuote,
   PayloadHgUnsubscribeFromMarket,
+  PayloadMakerOrderValidated,
 } from '../providers.types.js';
 import { BaseProvider, ReconnectionState } from '../providers.utils.js';
 
@@ -90,7 +91,9 @@ export class MakerProvider extends BaseProvider<
       WebsocketEvent.AccessToken,
       (data: PayloadAccessToken, callback: SocketOnCallback) => {
         callback('ACK');
-        this.log(`Received access token: ${data.accessToken}`);
+        this.log(
+          `Event '${WebsocketEvent.AccessToken}': ${JSON.stringify(data)}`
+        );
         rs.setAccessToken(data.accessToken);
         this.emit(WebsocketEvent.AccessToken, data, undefined);
       }
@@ -100,7 +103,9 @@ export class MakerProvider extends BaseProvider<
       WebsocketEvent.OrderCreated,
       (data: PayloadOrderCreated, callback: SocketOnCallback) => {
         callback('ACK');
-        this.log(`Received order created: ${JSON.stringify(data)}`);
+        this.log(
+          `Event '${WebsocketEvent.OrderCreated}': ${JSON.stringify(data)}`
+        );
         this.emit(WebsocketEvent.OrderCreated, data, undefined);
       }
     );
@@ -109,7 +114,9 @@ export class MakerProvider extends BaseProvider<
       WebsocketEvent.OrderFulfilled,
       (data: PayloadOrderFulfilled, callback: SocketOnCallback) => {
         callback('ACK');
-        this.log(`Received order fulfilled: ${JSON.stringify(data)}`);
+        this.log(
+          `Event '${WebsocketEvent.OrderFulfilled}': ${JSON.stringify(data)}`
+        );
         this.emit(WebsocketEvent.OrderFulfilled, data, undefined);
       }
     );
@@ -120,7 +127,9 @@ export class MakerProvider extends BaseProvider<
         data: PayloadQuoteAccepted,
         callback: (data: QuoteAcceptedCallbackArgs) => void
       ) => {
-        this.log(`Received quote accepted: ${JSON.stringify(data)}`);
+        this.log(
+          `Event '${WebsocketEvent.QuoteAccepted}': ${JSON.stringify(data)}`
+        );
         this.emit(WebsocketEvent.QuoteAccepted, data, undefined, callback);
       }
     );
@@ -131,9 +140,24 @@ export class MakerProvider extends BaseProvider<
         // This event is emitted to all market makers within a market room. Since this is emitted to a room,
         // we don't need to ACK to the server.
         this.log(
-          `Received request for quote broadcast: ${JSON.stringify(data)}`
+          `Event '${WebsocketEvent.RequestForQuoteBroadcast}': ${JSON.stringify(
+            data
+          )}`
         );
         this.emit(WebsocketEvent.RequestForQuoteBroadcast, data, undefined);
+      }
+    );
+
+    socket.on(
+      WebsocketEvent.MakerOrderValidated,
+      (data: PayloadMakerOrderValidated, callback: SocketOnCallback) => {
+        callback('ACK');
+        this.log(
+          `Event '${WebsocketEvent.MakerOrderValidated}': ${JSON.stringify(
+            data
+          )}`
+        );
+        this.emit(WebsocketEvent.MakerOrderValidated, data, undefined);
       }
     );
 
