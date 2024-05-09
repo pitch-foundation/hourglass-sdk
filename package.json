@@ -1,10 +1,16 @@
 {
   "name": "@hourglass/sdk",
+  "type": "module",
   "version": "0.0.1",
   "license": "MIT",
-  "type": "module",
-  "exports": "./dist/index.js",
-  "types": "dist/index.d.ts",
+  "source": "src/index.ts",
+  "exports": {
+    "require": "./dist/index.cjs",
+    "import": "./dist/index.modern.js"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.module.js",
+  "unpkg": "./dist/index.umd.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pitch-foundation/hourglass-sdk.git"
@@ -13,8 +19,8 @@
     "node": ">=16"
   },
   "scripts": {
-    "build": "tsc",
-    "clean": "rm -rf out",
+    "build": "babel -f .custom.babelrc node_modules/@wagmi/core --out-dir .", 
+    "clean": "rm -rf dist",
     "prepare": "npm run build",
     "docs": "typedoc --options typedoc.json",
     "typecheck": "tsc --noEmit",
@@ -34,6 +40,10 @@
     "wagmi": "^2.5.7"
   },
   "devDependencies": {
+    "@babel/cli": "^7.24.5",
+    "@babel/core": "^7.24.5",
+    "@babel/plugin-transform-modules-commonjs": "^7.24.1",
+    "@babel/preset-env": "^7.24.5",
     "@typechain/ethers-v5": "^11.1.2",
     "@types/events": "^3.0.3",
     "@types/uuid": "^9.0.8",
@@ -41,6 +51,7 @@
     "execa": "^8.0.1",
     "fs-extra": "^11.2.0",
     "glob": "^8.0.3",
+    "microbundle": "^0.15.1",
     "stream-browserify": "^3.0.0",
     "ts-node": "^10.9.1",
     "tsx": "^3.12.6",
