@@ -20,9 +20,9 @@
     "node": ">=16"
   },
   "scripts": {
+    "prepare": "npm run build",
     "build": "microbundle --compress false",
     "clean": "rm -rf out",
-    "prepare": "npm run build",
     "docs": "typedoc --options typedoc.json",
     "typecheck": "tsc --noEmit",
     "gen:abi": "tsx scripts/generate-abi/run.mts"
