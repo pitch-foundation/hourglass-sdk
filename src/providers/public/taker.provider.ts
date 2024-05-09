@@ -18,7 +18,6 @@ import {
   OrderExecutor,
 } from '../providers.types.js';
 import { BaseProvider, ReconnectionState } from '../providers.utils.js';
-import { signSeaportOrderComponents } from '../../seaport/seaport.utils.js';
 
 /** Input arguments for {@link TakerProvider.connect}.
  *
@@ -108,8 +107,6 @@ export interface TakerProviderRequestQuoteArgs {
  *
  * The signature should be an [EIP-2098](https://eips.ethereum.org/EIPS/eip-2098) compact signature as this is the
  * signature format that seaport requires. This means that the signature should be 64 bytes instead of 65 bytes.
- * See {@link signSeaportOrderComponents} for an example of how to convert a signature from full to compact using
- * ethers v5.
  * @interface
  */
 export interface TakerProviderAcceptQuoteArgs {
