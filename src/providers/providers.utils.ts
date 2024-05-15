@@ -19,36 +19,48 @@ import {
 } from './providers.types.js';
 import { v4 as uuidv4 } from 'uuid';
 
-export class TypedEventEmitter<TEvents extends Record<string, Array<unknown>>> {
-  protected _emitter = new EventEmitter();
+type TEventNames<TEvents> = keyof TEvents & string;
 
-  protected emit<TEventName extends keyof TEvents & string>(
+export class TypedEventEmitter<TEvents extends Record<string, Array<unknown>>> {
+  public emitter = new EventEmitter();
+
+  protected emit<TEventName extends TEventNames<TEvents>>(
     eventName: TEventName,
     ...eventArgs: TEvents[TEventName]
   ) {
-    this._emitter.emit(eventName, ...eventArgs);
+    return this.emitter.emit(eventName, ...eventArgs);
   }
 
   /** Listen for event on event emitter.
    *
    * @category Events
    */
-  on<TEventName extends keyof TEvents & string>(
+  on<TEventName extends TEventNames<TEvents>>(
     eventName: TEventName,
     handler: (...eventArgs: TEvents[TEventName]) => void
   ) {
-    this._emitter.on(eventName, handler);
+    return this.emitter.on(eventName, handler);
   }
 
   /** Stop listening for event on event emitter.
    *
    * @category Events
    */
-  off<TEventName extends keyof TEvents & string>(
+  off<TEventName extends TEventNames<TEvents>>(
     eventName: TEventName,
     handler: (...eventArgs: TEvents[TEventName]) => void
   ) {
-    this._emitter.off(eventName, handler);
+    return this.emitter.off(eventName, handler);
+  }
+
+  /** Remove all listeners for an event (or all events).
+   *
+   * @category Events
+   */
+  removeAllListeners<TEventName extends TEventNames<TEvents>>(
+    eventName?: TEventName
+  ) {
+    return this.emitter.removeAllListeners(eventName);
   }
 }
 
