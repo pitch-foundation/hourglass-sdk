@@ -23,6 +23,7 @@ export const OrderExecutor = {
 } as const;
 export type OrderExecutor = (typeof OrderExecutor)[keyof typeof OrderExecutor];
 
+// TODO: Deprecate
 export const Chain = {
   Ethereum: 'Ethereum',
 } as const;
@@ -163,10 +164,12 @@ export type Asset = {
   id: number;
   info: {
     address: string;
-    chain: Chain;
+    chainId: number;
+    chain: Chain; // TODO: Deprecate
   };
   erc20: {
-    chain: Chain;
+    chain: Chain; // TODO: Deprecate
+    chainId: number;
     address: string;
     name: string;
     symbol: string;
