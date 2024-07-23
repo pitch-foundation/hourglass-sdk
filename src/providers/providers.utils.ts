@@ -330,4 +330,16 @@ export class BaseProvider<
       this.socket.disconnect();
     }
   }
+
+  /*//////////////////////////////////////////////////////////////
+                                HELPER METHODS 
+      //////////////////////////////////////////////////////////////*/
+
+  /**
+   * Escape hatch to get the underlying socket instance. This is an advanced feature and should be used with caution.
+   *
+   */
+  public getSocket(): Socket | null {
+    return this.socket ?? null;
+  }
 }
