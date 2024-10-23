@@ -39,7 +39,17 @@ export class TypedEventEmitter<TEvents extends Record<string, Array<unknown>>> {
     eventName: TEventName,
     handler: (...eventArgs: TEvents[TEventName]) => void
   ) {
-    return this.emitter.on(eventName, handler);
+    // Get the current listeners for the event
+    const listeners = this.emitter.listeners(eventName);
+    // Check if the handler is already registered
+    if (listeners.length === 0) {
+      // If not, register the handler
+      return this.emitter.on(eventName, handler);
+    } else {
+      // Handler is already registered; do not add it again
+      console.warn(`Listener already registered for event "${eventName}".`);
+      return this;
+    }
   }
 
   /** Stop listening for event on event emitter.
