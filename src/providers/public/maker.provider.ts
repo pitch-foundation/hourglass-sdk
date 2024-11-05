@@ -279,13 +279,16 @@ export class MakerProvider extends BaseProvider<
    *    quoteAmount: '1000000000000000000', // 1 ether in wei
    *    rfqId: 2,
    *  });
-   *  makerProvider.on(MakerMethod.hg_submitQuote, (data: PayloadHgSubmitQuote, error) => {
+   *  makerProvider.on(
+   *    MakerMethod.hg_submitQuote,
+   *    (data: PayloadHgSubmitQuote, error) => {
    *    if (error) {
    *      console.error(`Error submitting quote: ${error}`);
    *      return;
    *    }
    *    console.log(`Successfully submitted quote: ${data}`);
-   *  });
+   *  }
+   * );
    * ```
    * @category Actions
    */
@@ -317,13 +320,16 @@ export class MakerProvider extends BaseProvider<
    * @example
    * ```typescript
    *  makerProvider.subscribeToMarket({ marketId: 1 });
-   *  makerProvider.on(MakerMethod.hg_subscribeToMarket, (data: PayloadHgSubscribeToMarket, error) => {
+   *  makerProvider.on(
+   *    MakerMethod.hg_subscribeToMarket,
+   *    (data: PayloadHgSubscribeToMarket, error) => {
    *    if (error) {
    *      console.error(`Error subscribing to market: ${error}`);
    *      return;
    *    }
    *    console.log(`Successfully subscribed to market ${data}`}`)
-   *  });
+   *  }
+   * );
    * ```
    * @category Actions
    */
@@ -348,13 +354,16 @@ export class MakerProvider extends BaseProvider<
    * @example
    * ```typescript
    *  makerProvider.unsubscribeFromMarket({ marketId: 1 });
-   *  makerProvider.on(MakerMethod.hg_unsubscribeFromMarket, (data: PayloadHgUnsubscribeFromMarket, error) => {
+   *  makerProvider.on(
+   *    MakerMethod.hg_unsubscribeFromMarket,
+   *    (data: PayloadHgUnsubscribeFromMarket, error) => {
    *    if (error) {
    *      console.error(`Error unsubscribing from market: ${error}`);
    *      return;
    *    }
    *    console.log(`Successfully unsubscribed from market ${data}`);
-   *  });
+   *  }
+   * );
    * ```
    * @category Actions
    */
@@ -379,13 +388,16 @@ export class MakerProvider extends BaseProvider<
    *    sellLevels: [{ price: '1000000000000000000', quantity: '1000000000000000000' }],
    *    buyLevels: [{ price: '1000000000000000000', quantity: '1000000000000000000' }],
    *  });
-   *  makerProvider.on(MakerMethod.hg_publishPriceLevels, (data: MakerProviderPublishPriceLevelsArgs, error) => {
+   *  makerProvider.on(
+   *    MakerMethod.hg_publishPriceLevels,
+   *    (data: PayloadHgPublishPriceLevels | undefined, error) => {
    *    if (error) {
    *      console.error(`Error publishing price levels to market: ${error}`);
    *      return;
    *    }
    *    console.log(`Successfully published price levels to market ${data}`);
-   *  });
+   *  }
+   * );
    * ```
    * @category Actions
    */
