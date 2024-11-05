@@ -281,7 +281,7 @@ export class MakerProvider extends BaseProvider<
    *  });
    *  makerProvider.on(
    *    MakerMethod.hg_submitQuote,
-   *    (data: PayloadHgSubmitQuote, error) => {
+   *    (data: PayloadHgSubmitQuote | undefined, error) => {
    *    if (error) {
    *      console.error(`Error submitting quote: ${error}`);
    *      return;
@@ -322,7 +322,7 @@ export class MakerProvider extends BaseProvider<
    *  makerProvider.subscribeToMarket({ marketId: 1 });
    *  makerProvider.on(
    *    MakerMethod.hg_subscribeToMarket,
-   *    (data: PayloadHgSubscribeToMarket, error) => {
+   *    (data: PayloadHgSubscribeToMarket | undefined, error) => {
    *    if (error) {
    *      console.error(`Error subscribing to market: ${error}`);
    *      return;
@@ -356,7 +356,7 @@ export class MakerProvider extends BaseProvider<
    *  makerProvider.unsubscribeFromMarket({ marketId: 1 });
    *  makerProvider.on(
    *    MakerMethod.hg_unsubscribeFromMarket,
-   *    (data: PayloadHgUnsubscribeFromMarket, error) => {
+   *    (data: PayloadHgUnsubscribeFromMarket | undefined, error) => {
    *    if (error) {
    *      console.error(`Error unsubscribing from market: ${error}`);
    *      return;
