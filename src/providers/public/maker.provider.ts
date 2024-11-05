@@ -16,6 +16,7 @@ import {
   PayloadHgSubmitQuote,
   PayloadHgUnsubscribeFromMarket,
   PayloadMakerOrderValidated,
+  PayloadHgPublishPriceLevels,
 } from '../providers.types.js';
 import { BaseProvider, ReconnectionState } from '../providers.utils.js';
 
@@ -58,6 +59,21 @@ export interface MakerProviderSubscribeToMarketArgs {
  */
 export interface MakerProviderUnsubscribeFromMarketArgs {
   marketId: number;
+}
+
+/** Input arguments for {@link MakerProvider.publishPriceLevels}.
+ *
+ * @property {number} marketId - The ID of the market to publish price levels for.
+ * @property {Array<{ price: string; quantity: string }>} buyLevels - The buy levels to publish.
+ *  Market maker buying `quantity` units of asset 0 for `price` units of asset 1
+ * @property {Array<{ price: string; quantity: string }>} sellLevels - The sell levels to publish.
+ *  Market maker selling `quantity` units of asset 0 for `price` units of asset 1
+ * @interface
+ */
+export interface MakerProviderPublishPriceLevelsArgs {
+  marketId: number;
+  buyLevels: { price: string; quantity: string }[];
+  sellLevels: { price: string; quantity: string }[];
 }
 
 /**
@@ -186,6 +202,13 @@ export class MakerProvider extends BaseProvider<
             data.error
           );
           break;
+        case MakerMethod.hg_publishPriceLevels:
+          this.emit(
+            msg.method,
+            data.result as PayloadHgPublishPriceLevels | undefined,
+            data.error
+          );
+          break;
         default: {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const _exhaustiveCheck: never = msg.method;
@@ -256,13 +279,16 @@ export class MakerProvider extends BaseProvider<
    *    quoteAmount: '1000000000000000000', // 1 ether in wei
    *    rfqId: 2,
    *  });
-   *  makerProvider.on(MakerMethod.hg_submitQuote, (data: PayloadHgSubmitQuote, error) => {
+   *  makerProvider.on(
+   *    MakerMethod.hg_submitQuote,
+   *    (data: PayloadHgSubmitQuote | undefined, error) => {
    *    if (error) {
    *      console.error(`Error submitting quote: ${error}`);
    *      return;
    *    }
    *    console.log(`Successfully submitted quote: ${data}`);
-   *  });
+   *  }
+   * );
    * ```
    * @category Actions
    */
@@ -294,13 +320,16 @@ export class MakerProvider extends BaseProvider<
    * @example
    * ```typescript
    *  makerProvider.subscribeToMarket({ marketId: 1 });
-   *  makerProvider.on(MakerMethod.hg_subscribeToMarket, (data: PayloadHgSubscribeToMarket, error) => {
+   *  makerProvider.on(
+   *    MakerMethod.hg_subscribeToMarket,
+   *    (data: PayloadHgSubscribeToMarket | undefined, error) => {
    *    if (error) {
    *      console.error(`Error subscribing to market: ${error}`);
    *      return;
    *    }
    *    console.log(`Successfully subscribed to market ${data}`}`)
-   *  });
+   *  }
+   * );
    * ```
    * @category Actions
    */
@@ -325,18 +354,55 @@ export class MakerProvider extends BaseProvider<
    * @example
    * ```typescript
    *  makerProvider.unsubscribeFromMarket({ marketId: 1 });
-   *  makerProvider.on(MakerMethod.hg_unsubscribeFromMarket, (data: PayloadHgUnsubscribeFromMarket, error) => {
+   *  makerProvider.on(
+   *    MakerMethod.hg_unsubscribeFromMarket,
+   *    (data: PayloadHgUnsubscribeFromMarket | undefined, error) => {
    *    if (error) {
    *      console.error(`Error unsubscribing from market: ${error}`);
    *      return;
    *    }
    *    console.log(`Successfully unsubscribed from market ${data}`);
-   *  });
+   *  }
+   * );
    * ```
    * @category Actions
    */
   unsubscribeFromMarket(args: MakerProviderUnsubscribeFromMarketArgs) {
     this.log(`Unsubscribing from market: ${JSON.stringify(args)}`);
     this.emitMessage(MakerMethod.hg_unsubscribeFromMarket, args);
+  }
+
+  /**
+   * Publish price levels for a market.
+   *
+   * - This method triggers the emission of a 'message' event to the server.
+   * - The listener for the {@link MakerMethod.hg_publishPriceLevels} will receive the confirmation.
+   * - If successful, the type of the response object will be {@link PayloadHgPublishPriceLevels}.
+   *
+   * @param {MakerProviderPublishPriceLevelsArgs} args - Input args.
+   *
+   * @example
+   * ```typescript
+   *  makerProvider.publishPriceLevels({
+   *    marketId: 1,
+   *    sellLevels: [{ price: '1000000000000000000', quantity: '1000000000000000000' }],
+   *    buyLevels: [{ price: '1000000000000000000', quantity: '1000000000000000000' }],
+   *  });
+   *  makerProvider.on(
+   *    MakerMethod.hg_publishPriceLevels,
+   *    (data: PayloadHgPublishPriceLevels | undefined, error) => {
+   *    if (error) {
+   *      console.error(`Error publishing price levels to market: ${error}`);
+   *      return;
+   *    }
+   *    console.log(`Successfully published price levels to market ${data}`);
+   *  }
+   * );
+   * ```
+   * @category Actions
+   */
+  publishPriceLevels(args: MakerProviderPublishPriceLevelsArgs) {
+    this.log(`Publishing price levels: ${JSON.stringify(args)}`);
+    this.emitMessage(MakerMethod.hg_publishPriceLevels, args);
   }
 }
