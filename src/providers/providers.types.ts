@@ -343,7 +343,7 @@ export type PayloadHgSubmitQuote = {
   createdAt: Date;
 };
 
-export type PayloadPublishPriceLevels = {
+export type PayloadHgPublishPriceLevels = {
   marketId: number;
   buyLevels: { price: string; quantity: string }[];
   sellLevels: { price: string; quantity: string }[];
@@ -387,7 +387,7 @@ export type MakerEventsMap = {
   [MakerMethod.hg_subscribeToMarket]: EventsMapEntryArgs<PayloadHgSubscribeToMarket>;
   [MakerMethod.hg_unsubscribeFromMarket]: EventsMapEntryArgs<PayloadHgUnsubscribeFromMarket>;
   [MakerMethod.hg_submitQuote]: EventsMapEntryArgs<PayloadHgSubmitQuote>;
-  [MakerMethod.hg_publishPriceLevels]: EventsMapEntryArgs<PayloadPublishPriceLevels>;
+  [MakerMethod.hg_publishPriceLevels]: EventsMapEntryArgs<PayloadHgPublishPriceLevels>;
   [WebsocketEvent.OrderFulfilled]: EventsMapEntryArgs<PayloadOrderFulfilled>;
   [WebsocketEvent.OrderCreated]: EventsMapEntryArgs<PayloadOrderCreated>;
   [WebsocketEvent.RequestForQuoteBroadcast]: EventsMapEntryArgs<PayloadRequestForQuoteBroadcast>;

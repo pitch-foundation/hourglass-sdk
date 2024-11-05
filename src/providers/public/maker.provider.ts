@@ -16,7 +16,7 @@ import {
   PayloadHgSubmitQuote,
   PayloadHgUnsubscribeFromMarket,
   PayloadMakerOrderValidated,
-  PayloadPublishPriceLevels,
+  PayloadHgPublishPriceLevels,
 } from '../providers.types.js';
 import { BaseProvider, ReconnectionState } from '../providers.utils.js';
 
@@ -205,7 +205,7 @@ export class MakerProvider extends BaseProvider<
         case MakerMethod.hg_publishPriceLevels:
           this.emit(
             msg.method,
-            data.result as PayloadPublishPriceLevels | undefined,
+            data.result as PayloadHgPublishPriceLevels | undefined,
             data.error
           );
           break;
@@ -368,7 +368,7 @@ export class MakerProvider extends BaseProvider<
    *
    * - This method triggers the emission of a 'message' event to the server.
    * - The listener for the {@link MakerMethod.hg_publishPriceLevels} will receive the confirmation.
-   * - If successful, the type of the response object will be {@link PayloadPublishPriceLevels}.
+   * - If successful, the type of the response object will be {@link PayloadHgPublishPriceLevels}.
    *
    * @param {MakerProviderPublishPriceLevelsArgs} args - Input args.
    *
