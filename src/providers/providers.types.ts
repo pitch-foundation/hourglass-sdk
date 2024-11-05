@@ -23,6 +23,7 @@ export const OrderExecutor = {
 } as const;
 export type OrderExecutor = (typeof OrderExecutor)[keyof typeof OrderExecutor];
 
+// TODO: Deprecate
 export const Chain = {
   Ethereum: 'Ethereum',
 } as const;
@@ -47,6 +48,7 @@ export const MakerMethod = {
   hg_subscribeToMarket: 'hg_subscribeToMarket',
   hg_unsubscribeFromMarket: 'hg_unsubscribeFromMarket',
   hg_submitQuote: 'hg_submitQuote',
+  hg_publishPriceLevels: 'hg_publishPriceLevels',
 } as const;
 export type MakerMethod = (typeof MakerMethod)[keyof typeof MakerMethod];
 
@@ -163,10 +165,12 @@ export type Asset = {
   id: number;
   info: {
     address: string;
-    chain: Chain;
+    chainId: number;
+    chain: Chain; // TODO: Deprecate
   };
   erc20: {
-    chain: Chain;
+    chain: Chain; // TODO: Deprecate
+    chainId: number;
     address: string;
     name: string;
     symbol: string;
@@ -339,6 +343,12 @@ export type PayloadHgSubmitQuote = {
   createdAt: Date;
 };
 
+export type PayloadHgPublishPriceLevels = {
+  marketId: number;
+  buyLevels: { price: string; quantity: string }[];
+  sellLevels: { price: string; quantity: string }[];
+};
+
 // ----------------------------------- Payloads - JSON RPC Methods - Data API -----------------------------------
 
 export type PayloadHgGetMarkets = {
@@ -377,6 +387,7 @@ export type MakerEventsMap = {
   [MakerMethod.hg_subscribeToMarket]: EventsMapEntryArgs<PayloadHgSubscribeToMarket>;
   [MakerMethod.hg_unsubscribeFromMarket]: EventsMapEntryArgs<PayloadHgUnsubscribeFromMarket>;
   [MakerMethod.hg_submitQuote]: EventsMapEntryArgs<PayloadHgSubmitQuote>;
+  [MakerMethod.hg_publishPriceLevels]: EventsMapEntryArgs<PayloadHgPublishPriceLevels>;
   [WebsocketEvent.OrderFulfilled]: EventsMapEntryArgs<PayloadOrderFulfilled>;
   [WebsocketEvent.OrderCreated]: EventsMapEntryArgs<PayloadOrderCreated>;
   [WebsocketEvent.RequestForQuoteBroadcast]: EventsMapEntryArgs<PayloadRequestForQuoteBroadcast>;
