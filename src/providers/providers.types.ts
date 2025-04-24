@@ -1,6 +1,6 @@
 import { ManagerOptions, Socket, SocketOptions } from 'socket.io-client';
 import {
-  SeaportOrderComponents,
+  SeaportOrder,
   SeaportOrderComponentsEntity,
 } from '../seaport/seaport.types.js';
 import {
@@ -12,8 +12,9 @@ import {
 
 export const UseCase = {
   DEFAULT: 'DEFAULT',
-  ION_DELEVERAGE: 'ION_DELEVERAGE',
-  HOURGLASS_POINT_LEVERAGE: 'HOURGLASS_POINT_LEVERAGE',
+  SHLIQ_SELL_PT: 'SHLIQ_SELL_PT',
+  SHLIQ_SELL_PYT: 'SHLIQ_SELL_PYT',
+  SHLIQ_SELL_PYT_VEDA: 'SHLIQ_SELL_PYT_VEDA',
 } as const;
 export type UseCase = (typeof UseCase)[keyof typeof UseCase];
 
@@ -32,7 +33,6 @@ export type Chain = (typeof Chain)[keyof typeof Chain];
 export const TakerSource = {
   API: 'API',
   HOURGLASS_PROTOCOL: 'HOURGLASS_PROTOCOL',
-  ION_PROTOCOL: 'ION_PROTOCOL',
 } as const;
 export type TakerSource = (typeof TakerSource)[keyof typeof TakerSource];
 
@@ -219,7 +219,7 @@ export type PayloadBestQuote =
         quoteId: number;
         createdAt: string;
       };
-      seaportOrderComponents: SeaportOrderComponents;
+      order: SeaportOrder;
     }
   | {
       rfqId: number;
@@ -263,7 +263,7 @@ export type PayloadOrderFulfilled = {
 export type PayloadQuoteAccepted = {
   quoteId: number;
   rfqId: number;
-  seaportOrderComponents: SeaportOrderComponents;
+  order: SeaportOrder;
 };
 
 export type PayloadRequestForQuoteBroadcast = {
@@ -293,7 +293,7 @@ export type PayloadMakerOrderValidated =
     };
 
 export type QuoteAcceptedCallbackArgs = {
-  components: SeaportOrderComponents;
+  order: SeaportOrder;
   signature: string;
 };
 

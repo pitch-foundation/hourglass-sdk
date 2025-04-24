@@ -116,3 +116,20 @@ export type SeaportOrderComponents = Omit<
   SeaportOrderParameters,
   'totalOriginalConsiderationItems'
 > & { counter: string };
+
+export type AdvancedSeaportOrderComponents = {
+  components: SeaportOrderComponents;
+  extraData: string;
+};
+
+export type SeaportOrderBasic = {
+  isAdvanced: false;
+  components: SeaportOrderComponents;
+};
+
+export type SeaportOrderAdvanced = {
+  isAdvanced: true;
+  seaportAdvancedOrder: AdvancedSeaportOrderComponents;
+};
+
+export type SeaportOrder = SeaportOrderBasic | SeaportOrderAdvanced;

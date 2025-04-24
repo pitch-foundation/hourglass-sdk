@@ -110,22 +110,60 @@ will have different kinds of features specific to the use case that require extr
 The current set of use cases include:
 
 - **DEFAULT**: A simple limit order swap.
-- **ION_DELEVERAGE**: Swapping a lending asset for a collateral asset for Ion Protocol. Details below.
+- **SHLIQ_SELL_PT**: Shared liquidity based use case for selling PTs.
+- **SHLIQ_SELL_PYT**: Shared liquidity based use case for selling PYTs.
+- **SHLIQ_SELL_PYT_VEDA**: Shared liquidity based use case for selling PYTs, specific to Veda.
 
 #### DEFAULT
 
 A simple swap of assets at an agreed upon price.
 
-#### Ion Deleverage
+#### SHLIQ_SELL_PT
 
-This use case enables ion protocol users to deleverage a debt position without requiring a balance of the borrowed asset up front.
+1. Pre-hook: Shared liquidity vault sends PT to offerer
+2. Seaport: Offerer sends PT to fulfiller
+3. Seaport: Fulfiller sends base asset to shared liquidity vault
 
-For example: Let's say that a user borrowed wstETH against rswETH collateral.
+Fulfiller 
+- Receives offer amount of PT 
+- Sends consideration amount of base asset
 
-- In order to deleverage the position without Hourglass, the end user would have to acquire wstETH, pay down the debt, then withdraw the collateral.
-- Using Hourglass, the following set of operations occur atomically in a single transaction:
-  1. A maker provides wstETH to a taker.
-  2. The taker (an Ion protocol user) uses this wstETH to pay down their debt, unlocking some quantity of rswETH collateral.
-  3. The taker sends some of the newly unlocked rswETH to the maker as a payment for services, keeping the remainder for themselves.
+Shared Liquidity Vault 
+- Sends offer amount of PT 
+- Receives consideration amount of base asset
 
-Functionally, this allows Ion users to deleverage their position using only their unlocked collateral for payment, greatly improving UX.
+#### SHLIQ_SELL_PYT
+
+1. Pre-hook: 
+  - Vault sends base asset to depositor
+  - Depositor mints PT to vault and PYT to offerer
+2. Seaport: Offerer sends PYT to fulfiller
+3. Seaport: Fulfiller sends base asset to vault
+
+Fulfiller:
+- Receives offer amount of PYT
+- Sends consideration amount of base asset
+
+Shared Liquidity Vault:
+- Sends offerAmount of base asset (to depositor)
+- Receives considerationAmount of base asset (from fulfiller)
+- Receives offerAmount of PT (from deposit)
+
+#### SHLIQ_SELL_PYT_VEDA
+
+1. Pre-hook:
+  - Vault sends vedaDepositAmount of base asset to zone for veda deposit
+  - Zone executes veda deposit which:
+	  - Mints PT to vault
+	  - Mints PYT to offerer
+2. Seaport: Offerer sends PYT to fulfiller
+3. Seaport: Fulfiller sends base asset to vault
+
+Fulfiller:
+- Receives offer amount of PYT
+- Sends consideration amount of base asset
+
+Shared Liquidity Vault:
+- Sends vedaDepositAmount of base asset (for veda deposit)
+- Receives considerationAmount of base asset (from fulfiller)
+- Receives offerAmount of PT (from deposit)
