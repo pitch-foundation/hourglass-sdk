@@ -15,6 +15,7 @@ export const UseCase = {
   SHLIQ_SELL_PT: 'SHLIQ_SELL_PT',
   SHLIQ_SELL_PYT: 'SHLIQ_SELL_PYT',
   SHLIQ_SELL_PYT_VEDA: 'SHLIQ_SELL_PYT_VEDA',
+  SHLIQ_SELL_PYT_SILO: 'SHLIQ_SELL_PYT_SILO',
 } as const;
 export type UseCase = (typeof UseCase)[keyof typeof UseCase];
 
