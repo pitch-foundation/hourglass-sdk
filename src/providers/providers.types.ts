@@ -295,7 +295,7 @@ export type PayloadMakerOrderValidated =
     };
 
 export type QuoteAcceptedCallbackArgs = {
-  order: SeaportOrderComponents;
+  components: SeaportOrderComponents;
   signature: string;
   extraData: string | null;
 };
