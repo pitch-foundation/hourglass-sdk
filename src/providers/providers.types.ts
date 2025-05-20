@@ -1,6 +1,7 @@
 import { ManagerOptions, Socket, SocketOptions } from 'socket.io-client';
 import {
   SeaportOrder,
+  SeaportOrderComponents,
   SeaportOrderComponentsEntity,
 } from '../seaport/seaport.types.js';
 import {
@@ -294,8 +295,9 @@ export type PayloadMakerOrderValidated =
     };
 
 export type QuoteAcceptedCallbackArgs = {
-  order: SeaportOrder;
+  order: SeaportOrderComponents;
   signature: string;
+  extraData: string | null;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
